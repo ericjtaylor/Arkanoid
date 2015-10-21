@@ -27,7 +27,7 @@ int poll()
 {
   FILE *f;
   char buf[8];
-  
+
   f = fopen("/sys/class/gpio/gpio7/value", "r");
   fgets (buf, sizeof(buf), f);
   fclose(f);
@@ -50,11 +50,11 @@ void gpio_init(char *gpio_num, char *direction)
   fclose(f);
 }
 
-SDL_Surface *load_image ()
+SDL_Surface* load_image(char *filename)
 {
   SDL_Surface* basic = NULL;
   SDL_Surface* opt = NULL;
-  basic = SDL_LoadBMP("ball.bmp");
+  basic = IMG_Load(filename);
   if (basic != NULL) {
     opt = SDL_DisplayFormat(basic);
     if (opt != NULL) {
@@ -67,27 +67,35 @@ SDL_Surface *load_image ()
 }
 
 int main() {
-  SDL_Surface* screen = NULL;
 
+  // inits
   gpio_init("7", "out");
-  
-  //First we need to start up SDL, and make sure it went ok
-  if (SDL_Init(SDL_INIT_VIDEO) != 0){
-    printf("SDL_Init Error: %s\n", SDL_GetError());
+  if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    printf("SDL_INIT_VIDEO Error: %s\n", SDL_GetError());
+    return 1;
+  }
+  if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) != 0) {
+    printf("SDL_INIT_PNG Error: %s\n", IMG_GetError());
     return 1;
   }
   SDL_ShowCursor(SDL_DISABLE);
 
-  screen = SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, 16, SDL_SWSURFACE | SDL_HWACCEL);
-  
-  //Main loop flag
+  SDL_Surface* screen = NULL;
+  screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 16, SDL_SWSURFACE | SDL_HWACCEL);
+
+  // main loop flag
   bool quit = false;
-  //Event handler
+  // event handler
   SDL_Event e;
-  SDL_Surface* bmp = load_image();
+  // frame counter
   int frame = 0;
   Uint32 start = SDL_GetTicks();
 
+  // gfx loading
+  SDL_Surface* gfx_ball = load_image("ball.png");
+  SDL_Surface* gfx_paddle = load_image("paddle.png");
+
+  // playfield init
   struct Balls	ball[BALLS];
   int i;
   for(i = 0; i < BALLS; i++) {
@@ -98,17 +106,21 @@ int main() {
     ball[i].vel.x = 10+i;
     ball[i].vel.y = 10+i;
   }
-  
+  SDL_Rect paddle = { 32, 8, (SCREEN_WIDTH/2) - 16, SCREEN_HEIGHT * 6 / 5 };
+
   //rendering loop
   while( !quit ) {
-    
+
     if (poll() == 0 ) {
       SDL_FillRect( screen, NULL, SDL_MapRGB(screen->format,0,0,0));
+      SDL_BlitSurface( gfx_paddle, NULL, screen, &paddle );
+
+
       for(i = 0; i < BALLS; i++) {
       // advance motion
       ball[i].loc.x += ball[i].vel.x;
       ball[i].loc.y += ball[i].vel.y;
-      
+
       // reverse x momentum
       if (ball[i].loc.x + ball[i].loc.w > SCREEN_WIDTH) {
 	ball[i].vel.x *= -1;
@@ -117,7 +129,7 @@ int main() {
 	ball[i].vel.x *= -1;
 	ball[i].loc.x -= 2 * ball[i].loc.x;
       }
-      
+
       // reverse y momentum
       if (ball[i].loc.y + ball[i].loc.h > SCREEN_HEIGHT) {
 	ball[i].vel.y *= -1;
@@ -126,12 +138,12 @@ int main() {
 	ball[i].vel.y *= -1;
 	ball[i].loc.y -= 2 * ball[i].loc.y;
       }
-      
+
           //Apply image to screen
-          SDL_BlitSurface( bmp, NULL, screen,&ball[i].loc );
+          SDL_BlitSurface( gfx_ball, NULL, screen,&ball[i].loc );
         }
     }
-    
+
     SDL_Flip( screen );
     frame++;
 
@@ -158,8 +170,8 @@ double d_time = (d_end - d_start) / 1000.0;
   printf("%f seconds\n", d_time);
   printf("%f fps\n", d_frame / d_time);
 
-  SDL_FreeSurface(bmp);
+  SDL_FreeSurface(gfx_ball);
   SDL_Quit();
-  
+
   return 0;
 }
