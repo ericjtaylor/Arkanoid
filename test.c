@@ -1,6 +1,3 @@
-// user@jpiece:~/Desktop$ gcc -o test test.c -lSDL2 -lSDL2_image
-// user@jpiece:~/Desktop$ ./test
-
 #include <stdio.h>
 #include <stdbool.h>
 #include <SDL/SDL.h>
@@ -9,7 +6,7 @@
 //Screen dimension constants
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
-const int BALLS = 64;
+const int BALLS = 32;
 const int SCALE = 2;
 
 struct Vector  {
@@ -134,8 +131,8 @@ int main() {
     ball[i].loc.y = 0;
     ball[i].loc.h = 6;
     ball[i].loc.w = 6;
-    ball[i].vel.x = 1;//+i;
-    ball[i].vel.y = 1;//+i;
+    ball[i].vel.x = 1;+i;
+    ball[i].vel.y = 1;+i;
   }
   SDL_Rect paddle = { (SCREEN_WIDTH / 2) - 16, SCREEN_HEIGHT*0.9, 32, 8 };
 
