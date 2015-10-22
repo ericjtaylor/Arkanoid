@@ -7,9 +7,10 @@
 #include <SDL/SDL_image.h>
 
 //Screen dimension constants
-const int SCREEN_WIDTH = 1920;
-const int SCREEN_HEIGHT = 1080;
-const int BALLS = 32;
+const int SCREEN_WIDTH = 640;
+const int SCREEN_HEIGHT = 480;
+const int BALLS = 8;
+const int SCALE = 2;
 
 struct Vector  {
   int x;
@@ -66,6 +67,34 @@ SDL_Surface* load_image(char *filename)
   return opt;
 }
 
+void collision(struct Balls *ball, SDL_Rect *paddle) {
+
+// top down collision
+// left of ball
+float x1 = ball->loc.x;
+float y1 = ball->loc.y+ball->loc.h;
+float x2 = ball->loc.x+ball->vel.x;
+float y2 = ball->loc.y+ball->loc.h+ball->vel.y;
+float x3 = paddle->x;
+float y3 = paddle->y;
+float x4 = paddle->x+paddle->w;
+float y4 = paddle->y;
+float denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
+float ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
+if ((ua < 0) || (ua > 1)) return;
+float ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
+if ((ub < 0) || (ub > 1)) return;
+
+int x = x1 + (ua * (x2-x1)); // should always be 0
+int y = y1 + (ua * (y2-y1));
+
+ball->vel.y *= -1;
+ball->loc.y -= 2 * (ball->loc.y + ball->loc.h - y);
+
+// right of ball
+
+}
+
 int main() {
 
   // inits
@@ -103,16 +132,19 @@ int main() {
     ball[i].loc.y = 0;
     ball[i].loc.h = 6;
     ball[i].loc.w = 6;
-    ball[i].vel.x = 10+i;
-    ball[i].vel.y = 10+i;
+    ball[i].vel.x = 1+i;
+    ball[i].vel.y = 1+i;
   }
-  SDL_Rect paddle = { 32, 8, (SCREEN_WIDTH/2) - 16, SCREEN_HEIGHT * 6 / 5 };
+  SDL_Rect paddle = { (SCREEN_WIDTH / 2) - 16, SCREEN_HEIGHT*0.9, 32, 8 };
 
   //rendering loop
   while( !quit ) {
 
     if (poll() == 0 ) {
-      SDL_FillRect( screen, NULL, SDL_MapRGB(screen->format,0,0,0));
+      SDL_Rect black = {1,1,SCREEN_WIDTH-2,SCREEN_HEIGHT-2};
+      SDL_FillRect( screen, NULL, SDL_MapRGB(screen->format,0xFF,0xFF,0xFF));
+      SDL_FillRect( screen, &black, SDL_MapRGB(screen->format,0,0,0));
+
       SDL_BlitSurface( gfx_paddle, NULL, screen, &paddle );
 
 
