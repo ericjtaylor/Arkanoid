@@ -9,7 +9,7 @@
 //Screen dimension constants
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
-const int BALLS = 8;
+const int BALLS = 64;
 const int SCALE = 2;
 
 struct Vector  {
@@ -67,7 +67,7 @@ SDL_Surface* load_image(char *filename)
   return opt;
 }
 
-void collision(struct Balls *ball, SDL_Rect *paddle) {
+int collision(struct Balls *ball, SDL_Rect *paddle) {
 
 // top down collision
 // left of ball
@@ -81,9 +81,9 @@ float x4 = paddle->x+paddle->w;
 float y4 = paddle->y;
 float denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
 float ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
-if ((ua < 0) || (ua > 1)) return;
+if ((ua < 0) || (ua > 1)) return 0;
 float ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
-if ((ub < 0) || (ub > 1)) return;
+if ((ub < 0) || (ub > 1)) return 0;
 
 int x = x1 + (ua * (x2-x1)); // should always be 0
 int y = y1 + (ua * (y2-y1));
@@ -92,6 +92,8 @@ ball->vel.y *= -1;
 ball->loc.y -= 2 * (ball->loc.y + ball->loc.h - y);
 
 // right of ball
+
+return 1;
 
 }
 
@@ -128,12 +130,12 @@ int main() {
   struct Balls	ball[BALLS];
   int i;
   for(i = 0; i < BALLS; i++) {
-    ball[i].loc.x = 50*i;
+    ball[i].loc.x = 12*i;
     ball[i].loc.y = 0;
     ball[i].loc.h = 6;
     ball[i].loc.w = 6;
-    ball[i].vel.x = 1+i;
-    ball[i].vel.y = 1+i;
+    ball[i].vel.x = 1;//+i;
+    ball[i].vel.y = 1;//+i;
   }
   SDL_Rect paddle = { (SCREEN_WIDTH / 2) - 16, SCREEN_HEIGHT*0.9, 32, 8 };
 
@@ -150,8 +152,10 @@ int main() {
 
       for(i = 0; i < BALLS; i++) {
       // advance motion
-      ball[i].loc.x += ball[i].vel.x;
-      ball[i].loc.y += ball[i].vel.y;
+      if ((ball[i].vel.y < 0) || (collision(&ball[i], &paddle)) == 0) {
+        ball[i].loc.x += ball[i].vel.x;
+        ball[i].loc.y += ball[i].vel.y;
+      }
 
       // reverse x momentum
       if (ball[i].loc.x + ball[i].loc.w > SCREEN_WIDTH) {
