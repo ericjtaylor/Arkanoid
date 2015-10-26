@@ -1,11 +1,11 @@
 #include <stdio.h>
-
+#include <string.h>
 
 int main()
 {
   FILE *f;
   char buf[8];
-  
+
   f = fopen("stage1.lvl", "r");
   while (fgets (buf, sizeof(buf), f))
     {

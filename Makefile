@@ -1,11 +1,16 @@
 CFLAGS += -lSDL -lSDL_image -O2
 GAMEBIN = game
 
-game: test.c
-	$(CC) $(CFLAGS) test.c -o $(GAMEBIN)
+all: game lvlgen
+
+game: game.c
+	$(CC) $(CFLAGS) game.c -o $(GAMEBIN)
+
+lvlgen: lvl.c
+	$(CC) lvl.c -o lvlgen
 
 clean:
-	rm -f game
+	rm -f game lvlgen
 
 run: game
 	./game
