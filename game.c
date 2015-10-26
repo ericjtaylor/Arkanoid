@@ -183,7 +183,7 @@ return 1;
 int main() {
 
   // inits
-  //gpio_init("7", "out");
+  gpio_init("7", "out");
 
   printf("Launching...\n");
 
@@ -234,6 +234,7 @@ int main() {
 
   Uint32 frame_start = 0;
   Uint32 frame_end = SDL_GetTicks();
+  Uint8* keystate;
 
   //rendering loop
   while( !quit ) {
@@ -249,6 +250,20 @@ int main() {
       SDL_FillRect( screen, NULL, SDL_MapRGB(screen->format,0xFF,0xFF,0xFF));
       SDL_FillRect( screen, &black, SDL_MapRGB(screen->format,0,0,0));
 
+
+      keystate = SDL_GetKeyState(NULL);
+
+      //continuous-response keys
+      if((keystate[SDLK_LEFT]) && (!keystate[SDLK_RIGHT]))
+      {
+        paddle.x -= 4*SCALE;
+        if (paddle.x < 0) paddle.x = 0;
+      }
+      if((keystate[SDLK_RIGHT]) && (!keystate[SDLK_LEFT]))
+      {
+        paddle.x += 4*SCALE;
+        if (paddle.x > SCREEN_WIDTH - paddle_size.w) paddle.x = (SCREEN_WIDTH - paddle_size.w);
+      }
       SDL_BlitSurface( gfx_paddle, &paddle_size, screen, &paddle );
 
 
