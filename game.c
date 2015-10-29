@@ -6,16 +6,17 @@
 #include <unistd.h>
 
 /* TODO
-moving the paddle with arrows
 paddle side collision
 paddle collision angle reflection
+multiple collisions in one frame
 better frame limiting
+race condition handling for collisions
 */
 
 //Screen dimension constants
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
-const int BALLS = 32;
+const int BALLS = 8;
 const int SCALE = 2;
 
 struct Vector  {
@@ -152,16 +153,16 @@ SDL_Surface* load_image(char *filename)
 
 int collision(struct Balls *ball, SDL_Rect *paddle) {
 
-// top down collision
-// left of ball
+// top surface collision
 float x1 = ball->loc.x;
-float y1 = ball->loc.y+ball->loc.h;
-float x2 = ball->loc.x+ball->vel.x;
-float y2 = ball->loc.y+ball->loc.h+ball->vel.y;
-float x3 = paddle->x-ball->loc.h+1;
+float y1 = ball->loc.y + ball->loc.h;
+float x2 = ball->loc.x + ball->vel.x;
+float y2 = ball->loc.y + ball->loc.h + ball->vel.y;
+float x3 = paddle->x - ball->loc.w + 1;
 float y3 = paddle->y;
-float x4 = paddle->x+paddle->w;
+float x4 = paddle->x + paddle->w;
 float y4 = paddle->y;
+
 float denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
 float ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
 if ((ua < 0) || (ua > 1)) return 0;
@@ -172,35 +173,52 @@ int x = x1 + (ua * (x2-x1)); // should always be 0
 int y = y1 + (ua * (y2-y1));
 
 ball->vel.y *= -1;
+/* technically i'm moving a bit without paddle reflection angle changes */
 ball->loc.y -= 2 * (ball->loc.y + ball->loc.h - y);
 
-// right of ball
+if (x - paddle->x < 4*SCALE) { /* wide */
+  ball->vel.x = -10;
+  ball->vel.y = -2;
+} else if (x - paddle->x < 8*SCALE) {
+  ball->vel.x = -8;
+  ball->vel.y = -6;
+} else if (x - paddle->x < 12*SCALE) {
+  ball->vel.x = -7;
+  ball->vel.y = -7;
+} else if (x - paddle->x < 16*SCALE) {
+  ball->vel.x = -1;
+  ball->vel.y = -10;
+} else if (x - paddle->x < 20*SCALE) {
+  ball->vel.x = 1;
+  ball->vel.y = -10;
+} else if (x - paddle->x < 24*SCALE) {
+  ball->vel.x = 7;
+  ball->vel.y = -7;
+} else if (x - paddle->x < 28*SCALE) {
+  ball->vel.x = 8;
+  ball->vel.y = -6;
+} else if (x - paddle->x < 32*SCALE) { /* wide */
+  ball->vel.x = 10;
+  ball->vel.y = -2;
+}
 
 return 1;
 
 }
 
 int main() {
+  printf("Launching...\n");
 
   // inits
   gpio_init("7", "out");
-
-  printf("Launching...\n");
-
-  // Initializes the video subsystem
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     fprintf(stderr, "Unable to init SDL: %s\n", SDL_GetError());
     exit(1);
   }
-
-  printf("Video Init PASS\n");
-
-  if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) < 0) {
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) < 0) {
     printf("SDL_INIT_PNG Error: %s\n", IMG_GetError());
     exit(1);
   }
-
-  printf("Image Init PASS\n");
   SDL_ShowCursor(SDL_DISABLE);
 
   SDL_Surface* screen = NULL;
@@ -226,8 +244,8 @@ int main() {
     ball[i].loc.y = 0;
     ball[i].loc.h = 6*SCALE;
     ball[i].loc.w = 6*SCALE;
-    ball[i].vel.x = 1;+i;
-    ball[i].vel.y = 10;+i;
+    ball[i].vel.x = 1;
+    ball[i].vel.y = 10;
   }
   SDL_Rect paddle = { (SCREEN_WIDTH / 2) - 16*SCALE, SCREEN_HEIGHT*0.9, 32, 8 };
   SDL_Rect paddle_size = { 0, 0, 32*SCALE, 8*SCALE };
@@ -240,7 +258,7 @@ int main() {
   while( !quit ) {
 
     // shitty framerate limiting
-  	while (frame_end - frame_start < 16) {
+  	while (frame_end - frame_start < 166) {
   		frame_end = SDL_GetTicks();
   	}
   	frame_start = frame_end;
@@ -269,6 +287,26 @@ int main() {
 
       for(i = 0; i < BALLS; i++) {
       // advance motion
+     // int box_collide = 0;
+
+     //   if (ball[i].loc.x + ball[i].loc.w < paddle.x) // R1 < L2
+     //     box_collide = 0;
+     //   if (ball[i].loc.x > paddle.x + paddle.w) // L1 > R2
+     //     box_collide = 0;
+     //   if (ball[i].loc.y > paddle.y + paddle.h) // U1 < D2
+     //     box_collide = 0;
+     //   if (ball[i].loc.y + ball[i].loc.h < paddle.y) // D1 > U2
+     //     box_collide = 0;
+
+     //  if ((box_collide == 1) && ((ball[i].loc.x + ball[i].loc.w/2) < (paddle.x + paddle.w/2))) {
+     //   ball[i].vel.x = -10;
+     //   ball[i].vel.y = -2;
+     //  }
+     //  if ((box_collide == 1) && ((ball[i].loc.x + ball[i].loc.w/2) >= (paddle.x + paddle.w/2))) {
+     //   ball[i].vel.x = 10;
+     //   ball[i].vel.y = -2;
+     //  }
+
       if ((ball[i].vel.y < 0) || (collision(&ball[i], &paddle)) == 0) {
         ball[i].loc.x += ball[i].vel.x;
         ball[i].loc.y += ball[i].vel.y;
@@ -276,20 +314,20 @@ int main() {
 
       // reverse x momentum
       if (ball[i].loc.x + ball[i].loc.w > SCREEN_WIDTH) {
-	ball[i].vel.x *= -1;
-	ball[i].loc.x -= 2 * (ball[i].loc.x + ball[i].loc.w - SCREEN_WIDTH);
+      	ball[i].vel.x *= -1;
+      	ball[i].loc.x -= 2 * (ball[i].loc.x + ball[i].loc.w - SCREEN_WIDTH);
       } else if (ball[i].loc.x < 0) {
-	ball[i].vel.x *= -1;
-	ball[i].loc.x -= 2 * ball[i].loc.x;
+      	ball[i].vel.x *= -1;
+      	ball[i].loc.x -= 2 * ball[i].loc.x;
       }
 
       // reverse y momentum
       if (ball[i].loc.y + ball[i].loc.h > SCREEN_HEIGHT) {
-	ball[i].vel.y *= -1;
-	ball[i].loc.y -= 2 * (ball[i].loc.y + ball[i].loc.h - SCREEN_HEIGHT);
+      	ball[i].vel.y *= -1;
+      	ball[i].loc.y -= 2 * (ball[i].loc.y + ball[i].loc.h - SCREEN_HEIGHT);
       } else if (ball[i].loc.y < 0) {
-	ball[i].vel.y *= -1;
-	ball[i].loc.y -= 2 * ball[i].loc.y;
+      	ball[i].vel.y *= -1;
+      	ball[i].loc.y -= 2 * ball[i].loc.y;
       }
 
           //Apply image to screen
