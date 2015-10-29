@@ -258,7 +258,7 @@ int main() {
   while( !quit ) {
 
     // shitty framerate limiting
-  	while (frame_end - frame_start < 166) {
+  	while (frame_end - frame_start < 16) {
   		frame_end = SDL_GetTicks();
   	}
   	frame_start = frame_end;
