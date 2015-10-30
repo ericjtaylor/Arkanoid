@@ -19,8 +19,8 @@ race condition handling for collisions
 //Screen dimension constants
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
-const int BALLS = 1;
 const int SCALE = 2;
+const int BALLS = 1;
 
 struct Vector  {
   int x;
@@ -32,8 +32,7 @@ struct Balls {
   struct Vector vel;
 };
 
-// polls for button press by reading the state
-// of a hardware file.
+// polls for button press by reading the state of a hardware file.
 int gpio_poll()
 {
   FILE *f;
@@ -292,6 +291,12 @@ int main() {
         paddle.x += 5*SCALE;
         if (paddle.x > SCREEN_WIDTH - paddle_size.w) paddle.x = (SCREEN_WIDTH - paddle_size.w);
       }
+
+      // paddle animation
+      if (!(frame & 7)) {
+        paddle_size.y += 8*SCALE;
+        if (paddle_size.y == 4*8*SCALE) paddle_size.y = 0;
+      }
       SDL_BlitSurface( gfx_paddle, &paddle_size, screen, &paddle );
 
 
@@ -301,11 +306,11 @@ int main() {
 
        if (ball[i].loc.x + ball[i].loc.w < paddle.x) // R1 < L2
          box_collide = 0;
-       if (ball[i].loc.x > paddle.x + paddle.w) // L1 > R2
+       else if (ball[i].loc.x > paddle.x + paddle.w) // L1 > R2
          box_collide = 0;
-       if (ball[i].loc.y > paddle.y + paddle.h) // U1 < D2
+       else if (ball[i].loc.y > paddle.y + paddle.h) // U1 < D2
          box_collide = 0;
-       if (ball[i].loc.y + ball[i].loc.h < paddle.y) // D1 > U2
+       else if (ball[i].loc.y + ball[i].loc.h < paddle.y) // D1 > U2
          box_collide = 0;
 
       if ((box_collide == 1) && ((ball[i].loc.x + ball[i].loc.w/2) < (paddle.x + paddle.w/2))) {
