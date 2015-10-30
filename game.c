@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
@@ -16,7 +17,7 @@ race condition handling for collisions
 //Screen dimension constants
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
-const int BALLS = 8;
+const int BALLS = 1;
 const int SCALE = 2;
 
 struct Vector  {
@@ -158,7 +159,7 @@ float x1 = ball->loc.x;
 float y1 = ball->loc.y + ball->loc.h;
 float x2 = ball->loc.x + ball->vel.x;
 float y2 = ball->loc.y + ball->loc.h + ball->vel.y;
-float x3 = paddle->x - ball->loc.w + 1;
+float x3 = paddle->x - ball->loc.w;
 float y3 = paddle->y;
 float x4 = paddle->x + paddle->w;
 float y4 = paddle->y;
@@ -169,38 +170,43 @@ if ((ua < 0) || (ua > 1)) return 0;
 float ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
 if ((ub < 0) || (ub > 1)) return 0;
 
-int x = x1 + (ua * (x2-x1)); // should always be 0
-int y = y1 + (ua * (y2-y1));
+float x = x1 + (ua * (x2-x1));
+float y = y1 + (ua * (y2-y1));
 
 ball->vel.y *= -1;
-/* technically i'm moving a bit without paddle reflection angle changes */
-ball->loc.y -= 2 * (ball->loc.y + ball->loc.h - y);
 
-if (x - paddle->x < 4*SCALE) { /* wide */
-  ball->vel.x = -10;
-  ball->vel.y = -2;
-} else if (x - paddle->x < 8*SCALE) {
-  ball->vel.x = -8;
-  ball->vel.y = -6;
-} else if (x - paddle->x < 12*SCALE) {
+/* calc % remaining after collision */
+float pct;
+if (abs(ball->vel.y) > abs(ball->vel.y)) pct = 1.0 - ((y-y1)/(y2-y1));
+else pct = 1.0 - ((x-x1)/(x2-x1));
+
+/* 37 pixels of collision, x offset -5 through 31 relative to paddle */
+if (x - paddle->x < 1*SCALE) { /* wide */
+  ball->vel.x = -9;
+  ball->vel.y = -4;
+} else if (x - paddle->x < 7*SCALE) {
   ball->vel.x = -7;
   ball->vel.y = -7;
-} else if (x - paddle->x < 16*SCALE) {
-  ball->vel.x = -1;
-  ball->vel.y = -10;
+} else if (x - paddle->x < 13*SCALE) {
+  ball->vel.x = -4;
+  ball->vel.y = -9;
 } else if (x - paddle->x < 20*SCALE) {
-  ball->vel.x = 1;
-  ball->vel.y = -10;
-} else if (x - paddle->x < 24*SCALE) {
+  ball->vel.x = 4;
+  ball->vel.y = -9;
+} else if (x - paddle->x < 26*SCALE) {
   ball->vel.x = 7;
   ball->vel.y = -7;
-} else if (x - paddle->x < 28*SCALE) {
-  ball->vel.x = 8;
-  ball->vel.y = -6;
 } else if (x - paddle->x < 32*SCALE) { /* wide */
-  ball->vel.x = 10;
-  ball->vel.y = -2;
+  ball->vel.x = 9;
+  ball->vel.y = -4;
 }
+
+/* advance a partial velocity amount */
+ball->loc.y += (float) ball->vel.y * pct;
+ball->loc.x += (float) ball->vel.x * pct;
+
+ball->loc.y = y - ball->loc.h;
+ball->loc.x = x;
 
 return 1;
 
@@ -237,18 +243,19 @@ int main() {
   SDL_Surface* gfx_paddle = load_image("paddle.png");
 
   // playfield init
+  SDL_Rect paddle = { (SCREEN_WIDTH / 2) - 16*SCALE, SCREEN_HEIGHT*0.9, 32, 8 };
+  SDL_Rect paddle_size = { 0, 0, 32*SCALE, 8*SCALE };
+
   struct Balls	ball[BALLS];
   int i;
   for(i = 0; i < BALLS; i++) {
-    ball[i].loc.x = 6*SCALE*i;
-    ball[i].loc.y = 0;
+    ball[i].loc.x = paddle.x - 12*SCALE + SCALE*-3 + SCALE*9;//i*SCALE;
+    ball[i].loc.y = SCREEN_HEIGHT*0.1;
     ball[i].loc.h = 6*SCALE;
     ball[i].loc.w = 6*SCALE;
     ball[i].vel.x = 1;
-    ball[i].vel.y = 10;
+    ball[i].vel.y = 20;
   }
-  SDL_Rect paddle = { (SCREEN_WIDTH / 2) - 16*SCALE, SCREEN_HEIGHT*0.9, 32, 8 };
-  SDL_Rect paddle_size = { 0, 0, 32*SCALE, 8*SCALE };
 
   Uint32 frame_start = 0;
   Uint32 frame_end = SDL_GetTicks();
@@ -274,20 +281,20 @@ int main() {
       //continuous-response keys
       if((keystate[SDLK_LEFT]) && (!keystate[SDLK_RIGHT]))
       {
-        paddle.x -= 4*SCALE;
+        paddle.x -= 5*SCALE;
         if (paddle.x < 0) paddle.x = 0;
       }
       if((keystate[SDLK_RIGHT]) && (!keystate[SDLK_LEFT]))
       {
-        paddle.x += 4*SCALE;
+        paddle.x += 5*SCALE;
         if (paddle.x > SCREEN_WIDTH - paddle_size.w) paddle.x = (SCREEN_WIDTH - paddle_size.w);
       }
       SDL_BlitSurface( gfx_paddle, &paddle_size, screen, &paddle );
 
 
       for(i = 0; i < BALLS; i++) {
-      // advance motion
-     // int box_collide = 0;
+     //  // advance motion
+     // int box_collide = 1;
 
      //   if (ball[i].loc.x + ball[i].loc.w < paddle.x) // R1 < L2
      //     box_collide = 0;
@@ -307,7 +314,7 @@ int main() {
      //   ball[i].vel.y = -2;
      //  }
 
-      if ((ball[i].vel.y < 0) || (collision(&ball[i], &paddle)) == 0) {
+      if ((ball[i].vel.y < 0) || (collision(&ball[i], &paddle) == 0)) {
         ball[i].loc.x += ball[i].vel.x;
         ball[i].loc.y += ball[i].vel.y;
       }
