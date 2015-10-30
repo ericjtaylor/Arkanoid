@@ -241,20 +241,52 @@ return collision;
 
 }
 
+inline void add_ns(struct timespec *ts1, struct timespec *ts2) {
+  ts1->tv_nsec = ts1->tv_nsec + ts2->tv_nsec;
+  if (ts1->tv_nsec >= 1000000000) {
+    ts1->tv_sec += 1;
+    ts1->tv_nsec -= 1000000000;
+  }
+  return;
+}
+
+inline int there_yet(struct timespec *ts1, struct timespec *ts2) {
+  if (ts2->tv_sec < ts1->tv_sec) return 0;
+  if (ts2->tv_sec > ts1->tv_sec) return 1;
+  if (ts2->tv_nsec < ts1->tv_nsec) return 0;
+  else return 1;
+}
+
 int main() {
   printf("Launching...\n");
 
   // inits
   gpio_init("7", "out");
+  printf("I/O INIT OK\n");
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     fprintf(stderr, "Unable to init SDL: %s\n", SDL_GetError());
     exit(1);
   }
-    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) < 0) {
+  printf("VIDEO INIT 1 OK\n");
+  if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) < 0) {
     printf("SDL_INIT_PNG Error: %s\n", IMG_GetError());
     exit(1);
   }
+  printf("VIDEO INIT 3 OK\n");
   SDL_ShowCursor(SDL_DISABLE);
+  struct timespec time_ns, next_frame, frame_delay;
+  if (clock_gettime (CLOCK_MONOTONIC, &time_ns) == -1) {
+    printf("Unable to init timer: clock_gettime CLOCK_MONOTONIC failure\n");
+    exit(1);
+  }
+  printf("TIMER INIT OK\n");
+  next_frame.tv_sec = time_ns.tv_sec;
+  next_frame.tv_nsec = time_ns.tv_nsec;
+  frame_delay.tv_sec = 0;
+  frame_delay.tv_nsec = 0;
+  add_ns(&next_frame, &frame_delay);
+  printf ("%ld s %ld ns\n", time_ns.tv_sec, time_ns.tv_nsec);
+  printf ("%ld s %ld ns\n", next_frame.tv_sec, next_frame.tv_nsec);
 
   SDL_Surface* screen = NULL;
   screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 16, SDL_SWSURFACE | SDL_HWACCEL);
@@ -289,26 +321,18 @@ int main() {
     ball[i].vel.y = 20;
   }
 
-  Uint32 frame_start = 0;
-  Uint32 frame_end = SDL_GetTicks();
   Uint8* keystate;
-
-  //timer_t* linux_timer;
-  //timer_create(CLOCK_MONOTONIC, SIGEV_NONE, &linux_timer);
 
   //rendering loop
   while( !quit ) {
 
     // shitty framerate limiting
-  	while (frame_end - frame_start < 16 && !keystate[SDLK_SPACE]) {
-  		frame_end = SDL_GetTicks();
+  	while (there_yet(&next_frame, &time_ns) == 0 && !keystate[SDLK_SPACE]) {
+      clock_gettime (CLOCK_MONOTONIC, &time_ns);
   	}
-  	frame_start = frame_end;
 
     if (gpio_poll() == 0 ) {
       SDL_Rect black = {1,1,SCREEN_WIDTH-2,SCREEN_HEIGHT-2};
-      //SDL_FillRect( screen, NULL, SDL_MapRGB(screen->format,0xFF,0xFF,0xFF));
-      //SDL_FillRect( screen, &black, SDL_MapRGB(screen->format,0,0,0));
       SDL_BlitSurface( gfx_bg, NULL, screen, NULL );
       SDL_BlitSurface( gfx_frame, NULL, screen, NULL );
       
@@ -379,6 +403,9 @@ int main() {
     if (SCALE == 2) SDL_BlitSurface( gfx_scan, NULL, screen, NULL );
     SDL_Flip( screen );
     frame++;
+    if (frame % 3 == 0) frame_delay.tv_nsec = 16666667;
+    else frame_delay.tv_nsec = 16666666;
+    add_ns(&next_frame, &frame_delay);
 
     //Handle events on queue
     while( SDL_PollEvent( &e ) != 0 )
@@ -393,10 +420,10 @@ int main() {
 
   Uint32 end = SDL_GetTicks();
 
-double d_frame =  (double) frame;
-double d_start = (double) start;
-double d_end = (double) end;
-double d_time = (d_end - d_start) / 1000.0;
+  double d_frame = (double) frame;
+  double d_start = (double) start;
+  double d_end = (double) end;
+  double d_time = (d_end - d_start) / 1000.0;
 
   printf("%u frames\n", frame);
   printf("%u ticks\n", end - start);
