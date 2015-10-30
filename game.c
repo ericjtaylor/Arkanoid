@@ -1,16 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <unistd.h>
+#include <signal.h>
+#include <time.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
-#include <sys/time.h>
-#include <unistd.h>
 
 /* TODO
 add block collisions
 */
 
 /* IMPROVEMENTS
+side collisions of paddle (ball movement)
 multiple collisions in one frame
 better frame limiting
 race condition handling for collisions
@@ -149,9 +151,14 @@ SDL_Surface* load_image(char *filename)
 	            putpixel(scaled, SCALE*sx + dx, SCALE*sy + dy, getpixel(opt, sx, sy));
 
   Uint32 colourkey = SDL_MapRGB(scaled->format, 0xFF, 0, 0xFF);
+  SDL_SetColorKey(opt, SDL_SRCCOLORKEY, colourkey);
   SDL_SetColorKey(scaled, SDL_SRCCOLORKEY, colourkey);
 
   SDL_FreeSurface(basic);
+  if (filename == "scanlines.png") {
+    SDL_FreeSurface(scaled);
+    return opt;
+  }
   SDL_FreeSurface(opt);
   return scaled;
 }
@@ -217,6 +224,23 @@ return 1;
 
 }
 
+int box_collide(struct Balls *ball, SDL_Rect *paddle) {
+
+int collision = 1;
+
+if (ball->loc.x + ball->loc.w < paddle->x) // R1 < L2
+  collision = 0;
+else if (ball->loc.x > paddle->x + paddle->w) // L1 > R2
+  collision = 0;
+else if (ball->loc.y > paddle->y + paddle->h) // U1 < D2
+  collision = 0;
+else if (ball->loc.y + ball->loc.h < paddle->y) // D1 > U2
+  collision = 0;
+
+return collision;
+
+}
+
 int main() {
   printf("Launching...\n");
 
@@ -248,6 +272,7 @@ int main() {
   SDL_Surface* gfx_paddle = load_image("paddle.png");
   SDL_Surface* gfx_bg = load_image("background4.png");
   SDL_Surface* gfx_frame = load_image("frame.png");
+  SDL_Surface* gfx_scan = load_image("scanlines.png");
 
   // playfield init
   SDL_Rect paddle = { (SCREEN_WIDTH / 2) - 16*SCALE, SCREEN_HEIGHT*0.9, 32, 8 };
@@ -268,6 +293,9 @@ int main() {
   Uint32 frame_end = SDL_GetTicks();
   Uint8* keystate;
 
+  //timer_t* linux_timer;
+  //timer_create(CLOCK_MONOTONIC, SIGEV_NONE, &linux_timer);
+
   //rendering loop
   while( !quit ) {
 
@@ -283,7 +311,7 @@ int main() {
       //SDL_FillRect( screen, &black, SDL_MapRGB(screen->format,0,0,0));
       SDL_BlitSurface( gfx_bg, NULL, screen, NULL );
       SDL_BlitSurface( gfx_frame, NULL, screen, NULL );
-
+      
       keystate = SDL_GetKeyState(NULL);
 
       //continuous-response keys
@@ -307,55 +335,48 @@ int main() {
 
 
       for(i = 0; i < BALLS; i++) {
-      // advance motion
-     int box_collide = 1;
 
-       if (ball[i].loc.x + ball[i].loc.w < paddle.x) // R1 < L2
-         box_collide = 0;
-       else if (ball[i].loc.x > paddle.x + paddle.w) // L1 > R2
-         box_collide = 0;
-       else if (ball[i].loc.y > paddle.y + paddle.h) // U1 < D2
-         box_collide = 0;
-       else if (ball[i].loc.y + ball[i].loc.h < paddle.y) // D1 > U2
-         box_collide = 0;
+        // moved the paddle into the ball (change to wide angle and reflect)
+        int move_hit = box_collide(&ball[i], &paddle);
 
-      if ((box_collide == 1) && ((ball[i].loc.x + ball[i].loc.w/2) < (paddle.x + paddle.w/2))) {
-       ball[i].vel.x = -9;
-       ball[i].vel.y = -4;
-      }
-      if ((box_collide == 1) && ((ball[i].loc.x + ball[i].loc.w/2) >= (paddle.x + paddle.w/2))) {
-       ball[i].vel.x = 9;
-       ball[i].vel.y = -4;
-      }
-
-      if ((ball[i].vel.y < 0) || (collision(&ball[i], &paddle) == 0)) {
-        ball[i].loc.x += ball[i].vel.x;
-        ball[i].loc.y += ball[i].vel.y;
-      }
-
-      // reverse x momentum
-      if (ball[i].loc.x + ball[i].loc.w > FRAME_RIGHT*SCALE) {
-      	ball[i].vel.x *= -1;
-      	ball[i].loc.x -= 2 * (ball[i].loc.x + ball[i].loc.w - FRAME_RIGHT*SCALE);
-      } else if (ball[i].loc.x < FRAME_LEFT*SCALE) {
-      	ball[i].vel.x *= -1;
-      	ball[i].loc.x -= 2 * (ball[i].loc.x - FRAME_LEFT*SCALE);
-      }
-
-      // reverse y momentum
-      if (ball[i].loc.y + ball[i].loc.h > SCREEN_HEIGHT) {
-      	ball[i].vel.y *= -1;
-      	ball[i].loc.y -= 2 * (ball[i].loc.y + ball[i].loc.h - SCREEN_HEIGHT);
-      } else if (ball[i].loc.y < FRAME_TOP*SCALE) {
-      	ball[i].vel.y *= -1;
-      	ball[i].loc.y -= 2 * (ball[i].loc.y - FRAME_TOP*SCALE);
-      }
-
-          //Apply image to screen
-          SDL_BlitSurface( gfx_ball, NULL, screen,&ball[i].loc );
+        if ((move_hit == 1) && ((ball[i].loc.x + ball[i].loc.w/2) < (paddle.x + paddle.w/2))) {
+          ball[i].vel.x = -9;
+          ball[i].vel.y = -4;
+        } else if ((move_hit == 1) && ((ball[i].loc.x + ball[i].loc.w/2) >= (paddle.x + paddle.w/2))) {
+          ball[i].vel.x = 9;
+          ball[i].vel.y = -4;
         }
+
+        // ball bounces on the surface of the paddle (change angle and reflect)
+        if ((ball[i].vel.y < 0) || (collision(&ball[i], &paddle) == 0)) {
+          ball[i].loc.x += ball[i].vel.x;
+          ball[i].loc.y += ball[i].vel.y;
+        }
+
+        // ball bounces on the side walls (reflect x)
+        if (ball[i].loc.x + ball[i].loc.w > FRAME_RIGHT*SCALE) {
+        	ball[i].vel.x *= -1;
+        	ball[i].loc.x -= 2 * (ball[i].loc.x + ball[i].loc.w - FRAME_RIGHT*SCALE);
+        } else if (ball[i].loc.x < FRAME_LEFT*SCALE) {
+        	ball[i].vel.x *= -1;
+        	ball[i].loc.x -= 2 * (ball[i].loc.x - FRAME_LEFT*SCALE);
+        }
+
+        // ball bounces on the top wall (reflect y)
+        if (ball[i].loc.y + ball[i].loc.h > SCREEN_HEIGHT) {
+        	ball[i].vel.y *= -1;
+        	ball[i].loc.y -= 2 * (ball[i].loc.y + ball[i].loc.h - SCREEN_HEIGHT);
+        } else if (ball[i].loc.y < FRAME_TOP*SCALE) {
+        	ball[i].vel.y *= -1;
+        	ball[i].loc.y -= 2 * (ball[i].loc.y - FRAME_TOP*SCALE);
+        }
+
+        // draw ball
+        SDL_BlitSurface( gfx_ball, NULL, screen,&ball[i].loc );
+      }
     }
 
+    if (SCALE == 2) SDL_BlitSurface( gfx_scan, NULL, screen, NULL );
     SDL_Flip( screen );
     frame++;
 
