@@ -7,8 +7,10 @@
 #include <unistd.h>
 
 /* TODO
-paddle side collision
-paddle collision angle reflection
+add block collisions
+*/
+
+/* IMPROVEMENTS
 multiple collisions in one frame
 better frame limiting
 race condition handling for collisions
@@ -205,8 +207,9 @@ if (x - paddle->x < 1*SCALE) { /* wide */
 ball->loc.y += (float) ball->vel.y * pct;
 ball->loc.x += (float) ball->vel.x * pct;
 
-ball->loc.y = y - ball->loc.h;
-ball->loc.x = x;
+/* or force a render on the paddle -- better collision feel? */
+// ball->loc.y = y - ball->loc.h;
+// ball->loc.x = x;
 
 return 1;
 
@@ -265,7 +268,7 @@ int main() {
   while( !quit ) {
 
     // shitty framerate limiting
-  	while (frame_end - frame_start < 16) {
+  	while (frame_end - frame_start < 16 && !keystate[SDLK_SPACE]) {
   		frame_end = SDL_GetTicks();
   	}
   	frame_start = frame_end;
@@ -293,26 +296,26 @@ int main() {
 
 
       for(i = 0; i < BALLS; i++) {
-     //  // advance motion
-     // int box_collide = 1;
+      // advance motion
+     int box_collide = 1;
 
-     //   if (ball[i].loc.x + ball[i].loc.w < paddle.x) // R1 < L2
-     //     box_collide = 0;
-     //   if (ball[i].loc.x > paddle.x + paddle.w) // L1 > R2
-     //     box_collide = 0;
-     //   if (ball[i].loc.y > paddle.y + paddle.h) // U1 < D2
-     //     box_collide = 0;
-     //   if (ball[i].loc.y + ball[i].loc.h < paddle.y) // D1 > U2
-     //     box_collide = 0;
+       if (ball[i].loc.x + ball[i].loc.w < paddle.x) // R1 < L2
+         box_collide = 0;
+       if (ball[i].loc.x > paddle.x + paddle.w) // L1 > R2
+         box_collide = 0;
+       if (ball[i].loc.y > paddle.y + paddle.h) // U1 < D2
+         box_collide = 0;
+       if (ball[i].loc.y + ball[i].loc.h < paddle.y) // D1 > U2
+         box_collide = 0;
 
-     //  if ((box_collide == 1) && ((ball[i].loc.x + ball[i].loc.w/2) < (paddle.x + paddle.w/2))) {
-     //   ball[i].vel.x = -10;
-     //   ball[i].vel.y = -2;
-     //  }
-     //  if ((box_collide == 1) && ((ball[i].loc.x + ball[i].loc.w/2) >= (paddle.x + paddle.w/2))) {
-     //   ball[i].vel.x = 10;
-     //   ball[i].vel.y = -2;
-     //  }
+      if ((box_collide == 1) && ((ball[i].loc.x + ball[i].loc.w/2) < (paddle.x + paddle.w/2))) {
+       ball[i].vel.x = -9;
+       ball[i].vel.y = -4;
+      }
+      if ((box_collide == 1) && ((ball[i].loc.x + ball[i].loc.w/2) >= (paddle.x + paddle.w/2))) {
+       ball[i].vel.x = 9;
+       ball[i].vel.y = -4;
+      }
 
       if ((ball[i].vel.y < 0) || (collision(&ball[i], &paddle) == 0)) {
         ball[i].loc.x += ball[i].vel.x;
