@@ -20,6 +20,9 @@ race condition handling for collisions
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 const int SCALE = 2;
+const int FRAME_LEFT = 72;
+const int FRAME_RIGHT = 247;
+const int FRAME_TOP = 16;
 const int BALLS = 1;
 
 struct Vector  {
@@ -243,6 +246,8 @@ int main() {
   // gfx loading
   SDL_Surface* gfx_ball = load_image("ball.png");
   SDL_Surface* gfx_paddle = load_image("paddle.png");
+  SDL_Surface* gfx_bg = load_image("background4.png");
+  SDL_Surface* gfx_frame = load_image("frame.png");
 
   // playfield init
   SDL_Rect paddle = { (SCREEN_WIDTH / 2) - 16*SCALE, SCREEN_HEIGHT*0.9, 32, 8 };
@@ -274,9 +279,10 @@ int main() {
 
     if (gpio_poll() == 0 ) {
       SDL_Rect black = {1,1,SCREEN_WIDTH-2,SCREEN_HEIGHT-2};
-      SDL_FillRect( screen, NULL, SDL_MapRGB(screen->format,0xFF,0xFF,0xFF));
-      SDL_FillRect( screen, &black, SDL_MapRGB(screen->format,0,0,0));
-
+      //SDL_FillRect( screen, NULL, SDL_MapRGB(screen->format,0xFF,0xFF,0xFF));
+      //SDL_FillRect( screen, &black, SDL_MapRGB(screen->format,0,0,0));
+      SDL_BlitSurface( gfx_bg, NULL, screen, NULL );
+      SDL_BlitSurface( gfx_frame, NULL, screen, NULL );
 
       keystate = SDL_GetKeyState(NULL);
 
@@ -284,12 +290,12 @@ int main() {
       if((keystate[SDLK_LEFT]) && (!keystate[SDLK_RIGHT]))
       {
         paddle.x -= 5*SCALE;
-        if (paddle.x < 0) paddle.x = 0;
+        if (paddle.x < FRAME_LEFT*SCALE) paddle.x = FRAME_LEFT*SCALE;
       }
       if((keystate[SDLK_RIGHT]) && (!keystate[SDLK_LEFT]))
       {
         paddle.x += 5*SCALE;
-        if (paddle.x > SCREEN_WIDTH - paddle_size.w) paddle.x = (SCREEN_WIDTH - paddle_size.w);
+        if (paddle.x + paddle_size.w > FRAME_RIGHT*SCALE) paddle.x = (FRAME_RIGHT*SCALE - paddle_size.w);
       }
 
       // paddle animation
@@ -328,21 +334,21 @@ int main() {
       }
 
       // reverse x momentum
-      if (ball[i].loc.x + ball[i].loc.w > SCREEN_WIDTH) {
+      if (ball[i].loc.x + ball[i].loc.w > FRAME_RIGHT*SCALE) {
       	ball[i].vel.x *= -1;
-      	ball[i].loc.x -= 2 * (ball[i].loc.x + ball[i].loc.w - SCREEN_WIDTH);
-      } else if (ball[i].loc.x < 0) {
+      	ball[i].loc.x -= 2 * (ball[i].loc.x + ball[i].loc.w - FRAME_RIGHT*SCALE);
+      } else if (ball[i].loc.x < FRAME_LEFT*SCALE) {
       	ball[i].vel.x *= -1;
-      	ball[i].loc.x -= 2 * ball[i].loc.x;
+      	ball[i].loc.x -= 2 * (ball[i].loc.x - FRAME_LEFT*SCALE);
       }
 
       // reverse y momentum
       if (ball[i].loc.y + ball[i].loc.h > SCREEN_HEIGHT) {
       	ball[i].vel.y *= -1;
       	ball[i].loc.y -= 2 * (ball[i].loc.y + ball[i].loc.h - SCREEN_HEIGHT);
-      } else if (ball[i].loc.y < 0) {
+      } else if (ball[i].loc.y < FRAME_TOP*SCALE) {
       	ball[i].vel.y *= -1;
-      	ball[i].loc.y -= 2 * ball[i].loc.y;
+      	ball[i].loc.y -= 2 * (ball[i].loc.y - FRAME_TOP*SCALE);
       }
 
           //Apply image to screen
