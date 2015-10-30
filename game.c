@@ -285,8 +285,6 @@ int main() {
   frame_delay.tv_sec = 0;
   frame_delay.tv_nsec = 0;
   add_ns(&next_frame, &frame_delay);
-  printf ("%ld s %ld ns\n", time_ns.tv_sec, time_ns.tv_nsec);
-  printf ("%ld s %ld ns\n", next_frame.tv_sec, next_frame.tv_nsec);
 
   SDL_Surface* screen = NULL;
   screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 16, SDL_SWSURFACE | SDL_HWACCEL);
@@ -351,9 +349,19 @@ int main() {
       }
 
       // paddle animation
-      if (!(frame & 7)) {
-        paddle_size.y += 8*SCALE;
-        if (paddle_size.y == 4*8*SCALE) paddle_size.y = 0;
+      switch (frame % 28) {
+        case 0 ... 6:
+          paddle_size.y = 0*SCALE;
+          break;
+        case 7 ... 13:
+          paddle_size.y = 8*SCALE;
+          break;
+        case 14 ... 20:
+          paddle_size.y = 16*SCALE;
+          break;
+        case 21 ... 27:
+          paddle_size.y = 24*SCALE;
+          break;
       }
       SDL_BlitSurface( gfx_paddle, &paddle_size, screen, &paddle );
 
