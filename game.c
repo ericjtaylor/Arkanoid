@@ -154,11 +154,18 @@ SDL_Surface* load_image(char *filename)
   SDL_SetColorKey(opt, SDL_SRCCOLORKEY, colourkey);
   SDL_SetColorKey(scaled, SDL_SRCCOLORKEY, colourkey);
 
-  SDL_FreeSurface(basic);
-  if (filename == "scanlines.png") {
-    SDL_FreeSurface(scaled);
-    return opt;
+  if (SCALE == 2) {
+    SDL_Surface *scan = NULL;
+    SDL_Surface *scan_opt = NULL;
+    scan = IMG_Load("scanlines.png");
+    scan_opt = SDL_DisplayFormat(scan);
+    SDL_SetColorKey(scan_opt, SDL_SRCCOLORKEY, colourkey);
+    SDL_BlitSurface(scan_opt, NULL, scaled, NULL);
+    SDL_FreeSurface(scan);
+    SDL_FreeSurface(scan_opt);
   }
+
+  SDL_FreeSurface(basic);
   SDL_FreeSurface(opt);
   return scaled;
 }
@@ -213,12 +220,12 @@ if (x - paddle->x < 1*SCALE) { /* wide */
 }
 
 /* advance a partial velocity amount */
-ball->loc.y += (float) ball->vel.y * pct;
-ball->loc.x += (float) ball->vel.x * pct;
+//ball->loc.y += (float) ball->vel.y * pct;
+//ball->loc.x += (float) ball->vel.x * pct;
 
 /* or force a render on the paddle -- better collision feel? */
-// ball->loc.y = y - ball->loc.h;
-// ball->loc.x = x;
+ball->loc.y = y - ball->loc.h;
+ball->loc.x = x;
 
 return 1;
 
@@ -299,8 +306,8 @@ int main() {
   SDL_Surface* gfx_paddle = load_image("paddle.png");
   SDL_Surface* gfx_bg = load_image("background4.png");
   SDL_Surface* gfx_frame = load_image("frame.png");
-  SDL_Surface* gfx_scan = load_image("scanlines.png");
-
+  SDL_BlitSurface( gfx_frame, NULL, gfx_bg, NULL );
+  
   // playfield init
   SDL_Rect paddle = { (SCREEN_WIDTH / 2) - 16*SCALE, SCREEN_HEIGHT*0.9, 32, 8 };
   SDL_Rect paddle_size = { 0, 0, 32*SCALE, 8*SCALE };
@@ -329,7 +336,6 @@ int main() {
     if (gpio_poll() == 0 ) {
       SDL_Rect black = {1,1,SCREEN_WIDTH-2,SCREEN_HEIGHT-2};
       SDL_BlitSurface( gfx_bg, NULL, screen, NULL );
-      SDL_BlitSurface( gfx_frame, NULL, screen, NULL );
       
       keystate = SDL_GetKeyState(NULL);
 
@@ -405,7 +411,6 @@ int main() {
       }
     }
 
-    if (SCALE == 2) SDL_BlitSurface( gfx_scan, NULL, screen, NULL );
     SDL_Flip( screen );
     frame++;
     if (frame % 3 == 0) frame_delay.tv_nsec = 16666667;
