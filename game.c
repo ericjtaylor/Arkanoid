@@ -262,24 +262,21 @@ int main() {
 
   // inits
   gpio_init("7", "out");
-  printf("I/O INIT OK\n");
+  //printf("I/O INIT OK\n");
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     fprintf(stderr, "Unable to init SDL: %s\n", SDL_GetError());
     exit(1);
-  }
-  printf("VIDEO INIT 1 OK\n");
+  } else printf("VIDEO INIT 1 OK\n");
   if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) < 0) {
     printf("SDL_INIT_PNG Error: %s\n", IMG_GetError());
     exit(1);
-  }
-  printf("VIDEO INIT 3 OK\n");
+  } else printf("VIDEO INIT 2 OK\n");
   SDL_ShowCursor(SDL_DISABLE);
   struct timespec time_ns, next_frame, frame_delay;
   if (clock_gettime (CLOCK_MONOTONIC, &time_ns) == -1) {
     printf("Unable to init timer: clock_gettime CLOCK_MONOTONIC failure\n");
     exit(1);
-  }
-  printf("TIMER INIT OK\n");
+  } else printf("TIMER INIT OK\n");
   next_frame.tv_sec = time_ns.tv_sec;
   next_frame.tv_nsec = time_ns.tv_nsec;
   frame_delay.tv_sec = 0;
