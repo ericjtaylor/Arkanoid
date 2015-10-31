@@ -14,7 +14,6 @@ add block collisions
 /* IMPROVEMENTS
 side collisions of paddle (ball movement)
 multiple collisions in one frame
-better frame limiting
 race condition handling for collisions
 */
 
@@ -325,21 +324,19 @@ int main() {
 
   Uint8* keystate;
 
-  //rendering loop
+  // rendering loop
   while( !quit ) {
 
-    // shitty framerate limiting
-  	while (there_yet(&next_frame, &time_ns) == 0 && !keystate[SDLK_SPACE]) {
+    // framerate limiting
+    while (there_yet(&next_frame, &time_ns) == 0 && !keystate[SDLK_SPACE]) {
       clock_gettime (CLOCK_MONOTONIC, &time_ns);
-  	}
+    }
 
     if (gpio_poll() == 0 ) {
-      SDL_Rect black = {1,1,SCREEN_WIDTH-2,SCREEN_HEIGHT-2};
       SDL_BlitSurface( gfx_bg, NULL, screen, NULL );
-      
-      keystate = SDL_GetKeyState(NULL);
 
-      //continuous-response keys
+      keystate = SDL_GetKeyState(NULL);
+      // continuous-response keys
       if((keystate[SDLK_LEFT]) && (!keystate[SDLK_RIGHT]))
       {
         paddle.x -= 5*SCALE;
