@@ -223,7 +223,7 @@ if (x - paddle->x < 1*SCALE) { /* wide */
 //ball->loc.x += (float) ball->vel.x * pct;
 
 /* or force a render on the paddle -- better collision feel? */
-ball->loc.y = y - ball->loc.h;
+ball->loc.y = y - ball->loc.h -1;
 ball->loc.x = x;
 
 return 1;
