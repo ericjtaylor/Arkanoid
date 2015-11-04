@@ -1,0 +1,36 @@
+SOLDER SIDE				PARTS SIDE
+       			
+GND       		A  1		GND
+GND			B  2		GND
++5V			C  3		+5V
++5V			D  4		+5V
+-5V			E  5		-5V
++12V			F  6		+12V
+SLOT			H  7		SLOT
+COIN COUNTER 2		J  8		COIN COUNTER 1
+LOCK OUT 2     		K  9		LOCK OUT 1
+SPEAKER -		L  10		SPEAKER +
+N/C			M  11		N/C
+VIDEO GREEN		N  12		VIDEO RED
+VIDEO SYNC		P  13		VIDEO BLUE
+SERVICE			R  14		VIDEO GROUND
+TILT			S  15		TEST
+COIN 2			T  16		COIN 1
+P2 - START		U  17		P1 - START
+P2 - UP			V  18		P1 - UP
+P2 - DOWN		W  19		P1 - DOWN
+P2 - LEFT		X  20		P1 - LEFT
+P2 - RIGHT		Y  21		P1 - RIGHT
+P2 - BUTTON 1		Z  22		P1 - BUTTON 1		
+P2 - BUTTON 2		a  23		P1 - BUTTON 2
+P2 - BUTTON 3		b  24		P1 - BUTTON 3
+N/C  	    		c  25		N/C
+N/C			d  26		N/C
+GND			e  27		GND
+GND			f  28		GND
+		
+		
+		
+		
+		
+		 
