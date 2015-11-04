@@ -206,24 +206,24 @@ if (abs(ball->vel.y) > abs(ball->vel.y)) pct = 1.0 - ((y-y1)/(y2-y1));
 else pct = 1.0 - ((x-x1)/(x2-x1));
 
 /* 37 pixels of collision, x offset -5 through 31 relative to paddle */
-if (x - paddle->x < 1*SCALE) { /* wide */
-  ball->vel.x = -4*SCALE;
-  ball->vel.y = -2*SCALE;
-} else if (x - paddle->x < 7*SCALE) {
-  ball->vel.x = -3*SCALE;
-  ball->vel.y = -3*SCALE;
-} else if (x - paddle->x < 13*SCALE) {
-  ball->vel.x = -2*SCALE;
-  ball->vel.y = -4*SCALE;
-} else if (x - paddle->x < 20*SCALE) {
-  ball->vel.x = 2*SCALE;
-  ball->vel.y = -4*SCALE;
-} else if (x - paddle->x < 26*SCALE) {
-  ball->vel.x = 3*SCALE;
-  ball->vel.y = -3*SCALE;
-} else if (x - paddle->x < 32*SCALE) { /* wide */
-  ball->vel.x = 4*SCALE;
-  ball->vel.y = -4*SCALE;
+if (x - paddle->x < 1) { /* wide */
+  ball->vel.x = -4;
+  ball->vel.y = -2;
+} else if (x - paddle->x < 7) {
+  ball->vel.x = -3;
+  ball->vel.y = -3;
+} else if (x - paddle->x < 13) {
+  ball->vel.x = -2;
+  ball->vel.y = -4;
+} else if (x - paddle->x < 20) {
+  ball->vel.x = 2;
+  ball->vel.y = -4;
+} else if (x - paddle->x < 26) {
+  ball->vel.x = 3;
+  ball->vel.y = -3;
+} else if (x - paddle->x < 32) { /* wide */
+  ball->vel.x = 4;
+  ball->vel.y = -4;
 }
 
 /* advance a partial velocity amount */
@@ -231,7 +231,7 @@ if (x - paddle->x < 1*SCALE) { /* wide */
 //ball->loc.x += (float) ball->vel.x * pct;
 
 /* or force a render on the paddle -- better collision feel? */
-ball->loc.y = y - ball->loc.h - 1*SCALE;
+ball->loc.y = y - ball->loc.h - 1;
 ball->loc.x = x;
 
 return 1;
@@ -270,7 +270,7 @@ else pct = 1.0 - ((x-x1)/(x2-x1));
 //ball->loc.x += (float) ball->vel.x * pct;
 
 /* or force a render on the brick -- better collision feel? */
-ball->loc.y = y - 1*SCALE;
+ball->loc.y = y - 1;
 ball->loc.x = x;
 brick->type = 0;
 
@@ -310,7 +310,7 @@ else pct = 1.0 - ((x-x1)/(x2-x1));
 //ball->loc.x += (float) ball->vel.x * pct;
 
 /* or force a render on the brick -- better collision feel? */
-ball->loc.y = y + 1*SCALE;
+ball->loc.y = y + 1;
 ball->loc.x = x;
 brick->type = 0;
 
@@ -351,7 +351,7 @@ else pct = 1.0 - ((x-x1)/(x2-x1));
 
 /* or force a render on the brick -- better collision feel? */
 ball->loc.y = y;
-ball->loc.x = x + 1*SCALE;
+ball->loc.x = x + 1;
 brick->type = 0;
 
 return 1;
@@ -391,7 +391,7 @@ else pct = 1.0 - ((x-x1)/(x2-x1));
 
 /* or force a render on the brick -- better collision feel? */
 ball->loc.y = y;
-ball->loc.x = x - 1*SCALE;
+ball->loc.x = x - 1;
 brick->type = 0;
 
 return 1;
@@ -429,6 +429,18 @@ inline int there_yet(struct timespec *ts1, struct timespec *ts2) {
   if (ts2->tv_sec > ts1->tv_sec) return 1;
   if (ts2->tv_nsec < ts1->tv_nsec) return 0;
   else return 1;
+}
+
+int SDL_BlitScaled(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
+	struct SDL_Rect srcrect2, dstrect2;
+	srcrect2.x = srcrect->x*SCALE;
+	srcrect2.y = srcrect->y*SCALE;
+	srcrect2.h = srcrect->h*SCALE;
+	srcrect2.w = srcrect->w*SCALE;
+	dstrect2.x = dstrect->x*SCALE;
+	dstrect2.y = dstrect->y*SCALE;
+
+	return SDL_BlitSurface(src, &srcrect2, dst, &dstrect2);
 }
 
 int main() {
@@ -478,16 +490,16 @@ int main() {
   SDL_Surface* gfx_brick = load_image("single_brick.png");
   
   // playfield init
-  SDL_Rect paddle = { (SCREEN_WIDTH / 2) - 16*SCALE, SCREEN_HEIGHT*0.9, 32, 8 };
-  SDL_Rect paddle_size = { 0, 0, 32*SCALE, 8*SCALE };
+  SDL_Rect paddle = { (320/2) - 16, 240-24, 32, 8 };
+  SDL_Rect paddle_size = { 0, 0, 32, 8 };
 
   struct Balls	ball[BALLS];
   int i, j;
   for(i = 0; i < BALLS; i++) {
-    ball[i].loc.x = paddle.x - 12*SCALE + SCALE*-3 + SCALE*9;
+    ball[i].loc.x = paddle.x - 12 + -3 + 9;
     ball[i].loc.y = SCREEN_HEIGHT*0.8;
-    ball[i].loc.h = 6*SCALE;
-    ball[i].loc.w = 6*SCALE;
+    ball[i].loc.h = 6;
+    ball[i].loc.w = 6;
     ball[i].vel.x = 1;
     ball[i].vel.y = 20;
   }
@@ -495,10 +507,10 @@ int main() {
   struct Bricks brick[28][11];
   for (i=0; i<28; i++) {
   	for (j=0; j<11; j++) {
-	    brick[i][j].loc.x = (FRAME_LEFT + j*16)*SCALE;
-	    brick[i][j].loc.y = (FRAME_TOP + i*8)*SCALE;
-	    brick[i][j].loc.h = 8*SCALE;
-	    brick[i][j].loc.w = 16*SCALE;
+	    brick[i][j].loc.x = (FRAME_LEFT + j*16);
+	    brick[i][j].loc.y = (FRAME_TOP + i*8);
+	    brick[i][j].loc.h = 8;
+	    brick[i][j].loc.w = 16;
 	    brick[i][j].type = 0;
 	    if (i<=13) brick[i][j].type = 1;
   	}
@@ -506,23 +518,23 @@ int main() {
 
   struct Bricks wall_U, wall_D, wall_L, wall_R;
   
-  wall_U.loc.x = SCALE*FRAME_LEFT;
-  wall_U.loc.y = SCALE*FRAME_TOP;
+  wall_U.loc.x = FRAME_LEFT;
+  wall_U.loc.y = FRAME_TOP;
   wall_U.loc.h = 0;
-  wall_U.loc.w = SCALE*(FRAME_RIGHT - FRAME_LEFT);
+  wall_U.loc.w = (FRAME_RIGHT - FRAME_LEFT);
 
-  wall_D.loc.x = SCALE*FRAME_LEFT;
+  wall_D.loc.x = FRAME_LEFT;
   wall_D.loc.y = SCREEN_HEIGHT;
   wall_D.loc.h = 0;
-  wall_D.loc.w = SCALE*(FRAME_RIGHT - FRAME_LEFT);
+  wall_D.loc.w = (FRAME_RIGHT - FRAME_LEFT);
 
-  wall_L.loc.x = SCALE*FRAME_LEFT;
-  wall_L.loc.y = SCALE*FRAME_TOP;
+  wall_L.loc.x = FRAME_LEFT;
+  wall_L.loc.y = FRAME_TOP;
   wall_L.loc.h = SCREEN_HEIGHT;
   wall_L.loc.w = 0;
 
-  wall_R.loc.x = SCALE*FRAME_RIGHT;
-  wall_R.loc.y = SCALE*FRAME_TOP;
+  wall_R.loc.x = FRAME_RIGHT;
+  wall_R.loc.y = FRAME_TOP;
   wall_R.loc.h = SCREEN_HEIGHT;
   wall_R.loc.w = 0;
 
@@ -536,39 +548,40 @@ int main() {
     while (there_yet(&next_frame, &time_ns) == 0 && !keystate[SDLK_SPACE]) {
       clock_gettime (CLOCK_MONOTONIC, &time_ns);
     }
-//SDL_Delay(1000);
+
     if (gpio_poll() == 0 ) {
       SDL_BlitSurface( gfx_bg, NULL, screen, NULL );
-
+SDL_Delay(1000);
       keystate = SDL_GetKeyState(NULL);
       // continuous-response keys
       if((keystate[SDLK_LEFT]) && (!keystate[SDLK_RIGHT]))
       {
-        paddle.x -= 5*SCALE;
-        if (paddle.x < FRAME_LEFT*SCALE) paddle.x = FRAME_LEFT*SCALE;
+        paddle.x -= 5;
+        if (paddle.x < FRAME_LEFT) paddle.x = FRAME_LEFT;
       }
       if((keystate[SDLK_RIGHT]) && (!keystate[SDLK_LEFT]))
       {
-        paddle.x += 5*SCALE;
-        if (paddle.x + paddle_size.w > FRAME_RIGHT*SCALE) paddle.x = (FRAME_RIGHT*SCALE - paddle_size.w);
+        paddle.x += 5;
+        if (paddle.x + paddle_size.w > FRAME_RIGHT) paddle.x = (FRAME_RIGHT - paddle_size.w);
       }
 
       // paddle animation
       switch (frame % 28) {
         case 0 ... 6:
-          paddle_size.y = 0*SCALE;
+          paddle_size.y = 0;
           break;
         case 7 ... 13:
-          paddle_size.y = 8*SCALE;
+          paddle_size.y = 8;
           break;
         case 14 ... 20:
-          paddle_size.y = 16*SCALE;
+          paddle_size.y = 16;
           break;
         case 21 ... 27:
-          paddle_size.y = 24*SCALE;
+          paddle_size.y = 24;
           break;
       }
-      SDL_BlitSurface( gfx_paddle, &paddle_size, screen, &paddle );
+
+      SDL_BlitScaled( gfx_paddle, &paddle_size, screen, &paddle );
 
       int b;
       for(b = 0; b < BALLS; b++) {
@@ -576,11 +589,11 @@ int main() {
         // moved the paddle into the ball (change to wide angle and reflect)
         int move_hit = box_collide(&ball[b], &paddle);
         if ((move_hit == 1) && ((ball[b].loc.x + ball[b].loc.w/2) < (paddle.x + paddle.w/2))) {
-          ball[b].vel.x = -4*SCALE;
-          ball[b].vel.y = -2*SCALE;
+          ball[b].vel.x = -4;
+          ball[b].vel.y = -2;
         } else if ((move_hit == 1) && ((ball[b].loc.x + ball[b].loc.w/2) >= (paddle.x + paddle.w/2))) {
-          ball[b].vel.x = 4*SCALE;
-          ball[b].vel.y = -2*SCALE;
+          ball[b].vel.x = 4;
+          ball[b].vel.y = -2;
         }
 
         // ball bounces on the surface of the paddle (change angle and reflect)
@@ -591,24 +604,24 @@ int main() {
 		      
 		      if (ball[b].vel.x > 0) {
 		      	x_dir = 1;
-		        bound_x1 = ((ball[b].loc.x + ball[b].loc.w - FRAME_LEFT*SCALE)/(16*SCALE));
-		        bound_x2 = x_dir+((ball[b].loc.x + ball[b].loc.w - FRAME_LEFT*SCALE + ball[b].vel.x)/(16*SCALE));
+		        bound_x1 = ((ball[b].loc.x + ball[b].loc.w - FRAME_LEFT)/(16));
+		        bound_x2 = x_dir+((ball[b].loc.x + ball[b].loc.w - FRAME_LEFT + ball[b].vel.x)/(16));
 		      }
 		      else {
 		      	x_dir = -1;
-		      	bound_x1 = ((ball[b].loc.x - FRAME_LEFT*SCALE)/(16*SCALE));
-		        bound_x2 = x_dir+((ball[b].loc.x - FRAME_LEFT*SCALE + ball[b].vel.x)/(16*SCALE));
+		      	bound_x1 = ((ball[b].loc.x - FRAME_LEFT)/(16));
+		        bound_x2 = x_dir+((ball[b].loc.x - FRAME_LEFT + ball[b].vel.x)/(16));
 		      }
 
 		      if (ball[b].vel.y > 0) {
 		      	y_dir = 1;
-		        bound_y1 = ((ball[b].loc.y + ball[b].loc.h - FRAME_TOP*SCALE)/(8*SCALE));
-		        bound_y2 = y_dir+((ball[b].loc.y + ball[b].loc.h - FRAME_TOP*SCALE + ball[b].vel.y)/(8*SCALE));
+		        bound_y1 = ((ball[b].loc.y + ball[b].loc.h - FRAME_TOP)/(8));
+		        bound_y2 = y_dir+((ball[b].loc.y + ball[b].loc.h - FRAME_TOP + ball[b].vel.y)/(8));
 		      }
 		      else {
 		      	y_dir = -1;
-		      	bound_y1 = ((ball[b].loc.y - FRAME_TOP*SCALE)/(8*SCALE));
-		        bound_y2 = y_dir+((ball[b].loc.y - FRAME_TOP*SCALE + ball[b].vel.y)/(8*SCALE));
+		      	bound_y1 = ((ball[b].loc.y - FRAME_TOP)/(8));
+		        bound_y2 = y_dir+((ball[b].loc.y - FRAME_TOP + ball[b].vel.y)/(8));
 		      }
 
 			int hit = 0;
@@ -642,31 +655,31 @@ int main() {
         }
 
         // // ball bounces on the side walls (reflect x)
-        // if (ball[b].loc.x + ball[b].loc.w > FRAME_RIGHT*SCALE) {
+        // if (ball[b].loc.x + ball[b].loc.w > FRAME_RIGHT) {
         // 	ball[b].vel.x *= -1;
-        // 	ball[b].loc.x -= 2 * (ball[b].loc.x + ball[b].loc.w - FRAME_RIGHT*SCALE);
-        // } else if (ball[b].loc.x < FRAME_LEFT*SCALE) {
+        // 	ball[b].loc.x -= 2 * (ball[b].loc.x + ball[b].loc.w - FRAME_RIGHT);
+        // } else if (ball[b].loc.x < FRAME_LEFT) {
         // 	ball[b].vel.x *= -1;
-        // 	ball[b].loc.x -= 2 * (ball[b].loc.x - FRAME_LEFT*SCALE);
+        // 	ball[b].loc.x -= 2 * (ball[b].loc.x - FRAME_LEFT);
         // }
 
         // // ball bounces on the top wall (reflect y)
         // if (ball[b].loc.y + ball[b].loc.h > SCREEN_HEIGHT) {
         // 	ball[b].vel.y *= -1;
         // 	ball[b].loc.y -= 2 * (ball[b].loc.y + ball[b].loc.h - SCREEN_HEIGHT);
-        // } else if (ball[b].loc.y < FRAME_TOP*SCALE) {
+        // } else if (ball[b].loc.y < FRAME_TOP) {
         // 	ball[b].vel.y *= -1;
-        // 	ball[b].loc.y -= 2 * (ball[b].loc.y - FRAME_TOP*SCALE);
+        // 	ball[b].loc.y -= 2 * (ball[b].loc.y - FRAME_TOP);
         // }
 
         // draw ball
-        SDL_BlitSurface( gfx_ball, NULL, screen,&ball[b].loc );
+        SDL_BlitScaled( gfx_ball, NULL, screen,&ball[b].loc );
       }
  
 	  for (i = 0; i < 28; i++) {
 	  	for (j=0; j<11; j++) {
 		     if (brick[i][j].type != 0)
-		     	SDL_BlitSurface( gfx_brick, NULL, screen, &brick[i][j].loc );
+		     	SDL_BlitScaled( gfx_brick, NULL, screen, &brick[i][j].loc );
 	  	}
 	  }
     }
