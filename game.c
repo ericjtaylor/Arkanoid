@@ -407,8 +407,7 @@ if (ball->loc.x + ball->loc.w < paddle->x) // R1 < L2
 else if (ball->loc.x > paddle->x + paddle->w) // L1 > R2
   collision = 0;
 else if (ball->loc.y > paddle->y + paddle->h) // U1 < D2
-  collision = 0;
-else if (ball->loc.y + ball->loc.h < paddle->y) // D1 > U2
+  collision = 0;else if (ball->loc.y + ball->loc.h < paddle->y) // D1 > U2
   collision = 0;
 
 return collision;
@@ -431,16 +430,12 @@ inline int there_yet(struct timespec *ts1, struct timespec *ts2) {
   else return 1;
 }
 
-int SDL_BlitScaled(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
-	struct SDL_Rect srcrect2, dstrect2;
-	srcrect2.x = srcrect->x*SCALE;
-	srcrect2.y = srcrect->y*SCALE;
-	srcrect2.h = srcrect->h*SCALE;
-	srcrect2.w = srcrect->w*SCALE;
-	dstrect2.x = dstrect->x*SCALE;
-	dstrect2.y = dstrect->y*SCALE;
-
-	return SDL_BlitSurface(src, &srcrect2, dst, &dstrect2);
+void Scale_Rect(SDL_Rect *srcrect, SDL_Rect *srcrect2) {
+	srcrect2->x = srcrect->x*SCALE;
+	srcrect2->y = srcrect->y*SCALE;
+	srcrect2->h = srcrect->h*SCALE;
+	srcrect2->w = srcrect->w*SCALE;
+	return;
 }
 
 int main() {
@@ -488,7 +483,7 @@ int main() {
   SDL_Surface* gfx_ball = load_image("ball.png");
   SDL_Surface* gfx_paddle = load_image("paddle.png");
   SDL_Surface* gfx_brick = load_image("single_brick.png");
-  
+
   // playfield init
   SDL_Rect paddle = { (320/2) - 16, 240-24, 32, 8 };
   SDL_Rect paddle_size = { 0, 0, 32, 8 };
@@ -497,7 +492,7 @@ int main() {
   int i, j;
   for(i = 0; i < BALLS; i++) {
     ball[i].loc.x = paddle.x - 12 + -3 + 9;
-    ball[i].loc.y = SCREEN_HEIGHT*0.8;
+    ball[i].loc.y = 240*0.8;
     ball[i].loc.h = 6;
     ball[i].loc.w = 6;
     ball[i].vel.x = 1;
@@ -517,27 +512,26 @@ int main() {
   }
 
   struct Bricks wall_U, wall_D, wall_L, wall_R;
-  
+
   wall_U.loc.x = FRAME_LEFT;
   wall_U.loc.y = FRAME_TOP;
   wall_U.loc.h = 0;
   wall_U.loc.w = (FRAME_RIGHT - FRAME_LEFT);
 
   wall_D.loc.x = FRAME_LEFT;
-  wall_D.loc.y = SCREEN_HEIGHT;
+  wall_D.loc.y = 240;
   wall_D.loc.h = 0;
   wall_D.loc.w = (FRAME_RIGHT - FRAME_LEFT);
 
   wall_L.loc.x = FRAME_LEFT;
   wall_L.loc.y = FRAME_TOP;
-  wall_L.loc.h = SCREEN_HEIGHT;
+  wall_L.loc.h = 240;
   wall_L.loc.w = 0;
 
   wall_R.loc.x = FRAME_RIGHT;
   wall_R.loc.y = FRAME_TOP;
-  wall_R.loc.h = SCREEN_HEIGHT;
+  wall_R.loc.h = 240;
   wall_R.loc.w = 0;
-
 
   Uint8* keystate;
 
@@ -551,7 +545,6 @@ int main() {
 
     if (gpio_poll() == 0 ) {
       SDL_BlitSurface( gfx_bg, NULL, screen, NULL );
-SDL_Delay(1000);
       keystate = SDL_GetKeyState(NULL);
       // continuous-response keys
       if((keystate[SDLK_LEFT]) && (!keystate[SDLK_RIGHT]))
@@ -581,7 +574,10 @@ SDL_Delay(1000);
           break;
       }
 
-      SDL_BlitScaled( gfx_paddle, &paddle_size, screen, &paddle );
+      struct SDL_Rect temp, temp2;
+    	Scale_Rect(&paddle_size, &temp);
+      Scale_Rect(&paddle, &temp2);
+      SDL_BlitSurface( gfx_paddle, &temp, screen, &temp2 );
 
       int b;
       for(b = 0; b < BALLS; b++) {
@@ -600,8 +596,7 @@ SDL_Delay(1000);
         if ((ball[b].vel.y < 0) || (collision(&ball[b], &paddle) == 0)) {
 
 	        // brick collisions
-		 	  int x_dir, bound_x1, bound_x2, y_dir, bound_y1, bound_y2;
-		      
+		int x_dir, bound_x1, bound_x2, y_dir, bound_y1, bound_y2;
 		      if (ball[b].vel.x > 0) {
 		      	x_dir = 1;
 		        bound_x1 = ((ball[b].loc.x + ball[b].loc.w - FRAME_LEFT)/(16));
@@ -645,7 +640,7 @@ SDL_Delay(1000);
 			if (hit == 0) hit = left_collide(&ball[b], &wall_L);
 			if (hit == 0) hit = right_collide(&ball[b], &wall_R);
 
-			// todo -- collide with the nearest brick    
+			// todo -- collide with the nearest brick
 
 			// no collisions -- move
 			if (hit == 0) {
@@ -673,13 +668,16 @@ SDL_Delay(1000);
         // }
 
         // draw ball
-        SDL_BlitScaled( gfx_ball, NULL, screen,&ball[b].loc );
+
+	Scale_Rect(&ball[b].loc, &temp);
+        SDL_BlitSurface( gfx_ball, NULL, screen, &temp );
       }
- 
+
 	  for (i = 0; i < 28; i++) {
 	  	for (j=0; j<11; j++) {
 		     if (brick[i][j].type != 0)
-		     	SDL_BlitScaled( gfx_brick, NULL, screen, &brick[i][j].loc );
+			Scale_Rect(&brick[i][j].loc, &temp);
+		     	SDL_BlitSurface( gfx_brick, NULL, screen, &temp );
 	  	}
 	  }
     }
