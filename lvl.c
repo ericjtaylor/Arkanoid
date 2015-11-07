@@ -5,11 +5,10 @@
 #define WELL_WIDTH 11
 #define WELL_HEIGHT 13
 
-void make_lvl(char *stage)
+void make_lvl(char *stage, int brix[][WELL_HEIGHT])
 {
   FILE *f;
   char buf[256];
-  int brix[ WELL_WIDTH ][ WELL_HEIGHT ];
   int x;
   int y = 0;
 
@@ -18,7 +17,7 @@ void make_lvl(char *stage)
     {
       x = 0;
       y++;
-      while (buf[x] != '\n' && x < WELL_WIDTH * 2)
+      while (buf[x] != '\n' && x < WELL_WIDTH)
 	{
 	  
 	  if (buf[x] == '1')
@@ -39,9 +38,8 @@ void make_lvl(char *stage)
 
 int main()
 {
-  int *brix;
-  brix = malloc(WELL_WIDTH*WELL_HEIGHT*sizeof(int));
-  make_lvl("stage1.lvl");
-  free(brix);
+  int brix[ WELL_WIDTH ][ WELL_HEIGHT ];
+  make_lvl("stage1.lvl", brix); //example call
+  printf("%d", brix[0][0]);     //use case
   return 0;
 }
