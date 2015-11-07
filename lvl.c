@@ -1,33 +1,47 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
-#define WELL_WIDTH 7 // width is given in bricks
+#define WELL_WIDTH 11
+#define WELL_HEIGHT 13
 
-int main()
+void make_lvl(char *stage)
 {
   FILE *f;
   char buf[256];
-  int c;
+  int brix[ WELL_WIDTH ][ WELL_HEIGHT ];
+  int x;
+  int y = 0;
 
-  f = fopen("stage1.lvl", "r");
+  f = fopen(stage, "r");
   while (fgets (buf, sizeof(buf), f))
     {
-      c = 0;
-      while (buf[c] != '\n' && c < WELL_WIDTH * 2)
+      x = 0;
+      y++;
+      while (buf[x] != '\n' && x < WELL_WIDTH * 2)
 	{
 	  
-	  if (buf[c] == '1')
+	  if (buf[x] == '1')
 	    {
-	      printf("yes ");
+	      brix[x][y] = 1;
+	      //printf("%d,%d\t", x, y);
 	    }
-	  else if (buf[c] == '0')
+	  else if (buf[x] == '0')
 	    {
-	      printf("no ");
-	    } 
-	  c++; 
+	      brix[x][y] = 0;
+	    }
+	  x++;
 	}
-      printf("\n");
+      //printf("\n");
     }
   fclose(f);
+}
+
+int main()
+{
+  int *brix;
+  brix = malloc(WELL_WIDTH*WELL_HEIGHT*sizeof(int));
+  make_lvl("stage1.lvl");
+  free(brix);
   return 0;
 }
