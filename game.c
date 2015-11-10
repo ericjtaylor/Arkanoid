@@ -507,7 +507,7 @@ int main() {
 
   SDL_Surface* gfx_ball = load_image("ball.png");
   SDL_Surface* gfx_paddle = load_image("paddle.png");
-  SDL_Surface* gfx_brick = load_image("single_brick.png");
+  SDL_Surface* gfx_brick = load_image("blox.png");
 
   // playfield init
   SDL_Rect paddle = { (320/2) - 16, 240-24, 32, 8 };
@@ -703,8 +703,15 @@ int main() {
 	  for (i = 0; i < 28; i++) {
 	  	for (j=0; j<11; j++) {
 		     if (brick[i][j].type != 0)
-			Scale_Rect(&brick[i][j].loc, &temp);
-		     	SDL_BlitSurface( gfx_brick, NULL, screen, &temp );
+		       {
+			 struct SDL_Rect temp3;
+			 temp3.x = 0;
+			 temp3.y = (brick[i][j].type - 1) *8*SCALE;
+			 temp3.h = 8*SCALE;
+			 temp3.w = 16*SCALE;
+			 Scale_Rect(&brick[i][j].loc, &temp);
+			 SDL_BlitSurface( gfx_brick, &temp3, screen, &temp );
+		       }
 	  	}
 	  }
     }
