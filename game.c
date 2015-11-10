@@ -31,7 +31,7 @@ const int FRAME_RIGHT = 247;
 const int FRAME_TOP = 16;
 const int BALLS = 1;
 const int WELL_WIDTH = 11;
-const int WELL_HEIGHT = 14;
+const int WELL_HEIGHT = 28;
 
 struct Vector  {
   int x;
