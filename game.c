@@ -536,7 +536,7 @@ int main() {
   	}
   }
 
-  make_lvl("stage1.lvl", brick);
+  make_lvl("stages/stage1.lvl", brick);
   
   struct Bricks wall_U, wall_D, wall_L, wall_R;
 
