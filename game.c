@@ -30,6 +30,8 @@ const int FRAME_LEFT = 72;
 const int FRAME_RIGHT = 247;
 const int FRAME_TOP = 16;
 const int BALLS = 1;
+const int WELL_WIDTH = 11;
+const int WELL_HEIGHT = 14;
 
 struct Vector  {
   int x;
@@ -45,6 +47,29 @@ struct Bricks {
   SDL_Rect loc;
   int type;
 };
+
+void make_lvl(char *stage, struct Bricks brix[][WELL_WIDTH])
+{
+  FILE *f;
+  char buf[256];
+  int x;
+  int y = 0;
+  int c;
+
+  f = fopen(stage, "r");
+  while (fgets (buf, sizeof(buf), f))
+    {
+      x = 0;
+      while (buf[x] != '\n' && x < WELL_WIDTH)
+	{
+	  c = buf[x] - '0'; // cast char to int
+	  brix[y][x].type = c;
+	  x++;
+	}
+      y++;
+    }
+  fclose(f);
+}
 
 // polls for button press by reading the state of a hardware file.
 int gpio_poll()
@@ -511,6 +536,8 @@ int main() {
   	}
   }
 
+  make_lvl("stage1.lvl", brick);
+  
   struct Bricks wall_U, wall_D, wall_L, wall_R;
 
   wall_U.loc.x = FRAME_LEFT;
