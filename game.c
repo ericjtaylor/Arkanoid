@@ -8,18 +8,18 @@
 #include <SDL/SDL_image.h>
 
 /* TODO
-add flat double hits
-add cancave double hits
-add corner rebounds
-add edges as invisible indestructible blocks
-add paddle as indestructible block
-dynamic ball speeds
+   add flat double hits
+   add cancave double hits
+   add corner rebounds
+   add edges as invisible indestructible blocks
+   add paddle as indestructible block
+   dynamic ball speeds
 */
 
 /* IMPROVEMENTS
-ball race condition handling for collisions
-edge race condition handling (near corner hits)
-left & right collision spacing?
+   ball race condition handling for collisions
+   edge race condition handling (near corner hits)
+   left & right collision spacing?
 */
 
 //Screen dimension constants
@@ -78,13 +78,13 @@ int gpio_poll()
   char buf[8];
 
   if (access("/sys/class/gpio/gpio7/value", F_OK) != -1) {
-	  f = fopen("/sys/class/gpio/gpio7/value", "r");
-	  fgets (buf, sizeof(buf), f);
-	  fclose(f);
-	  if (strcmp(buf, "1\n") == 0)
-	    return 1;
-	  else
-	    return 0;
+    f = fopen("/sys/class/gpio/gpio7/value", "r");
+    fgets (buf, sizeof(buf), f);
+    fclose(f);
+    if (strcmp(buf, "1\n") == 0)
+      return 1;
+    else
+      return 0;
   } else return 0;
 }
 
@@ -94,79 +94,79 @@ void gpio_init(char *gpio_num, char *direction)
 {
   FILE *f;
   if ((access("/sys/class/gpio/export", F_OK) != -1)
-  	&&
-  	(access("/sys/class/gpio/gpio7/direction", F_OK) != -1)) {
-	  f = fopen("/sys/class/gpio/export", "w");
-	  fprintf(f, "%s", gpio_num);
-	  fclose(f);
-	  f = fopen("/sys/class/gpio/gpio7/direction", "w");
-	  fprintf(f, "%s", direction);
-	  fclose(f);
+      &&
+      (access("/sys/class/gpio/gpio7/direction", F_OK) != -1)) {
+    f = fopen("/sys/class/gpio/export", "w");
+    fprintf(f, "%s", gpio_num);
+    fclose(f);
+    f = fopen("/sys/class/gpio/gpio7/direction", "w");
+    fprintf(f, "%s", direction);
+    fclose(f);
   } else printf("GPIO not found\n");
 }
 
 Uint32 getpixel(SDL_Surface *surface, int x, int y)
 {
-    int bpp = surface->format->BytesPerPixel;
-    /* Here p is the address to the pixel we want to retrieve */
-    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+  int bpp = surface->format->BytesPerPixel;
+  /* Here p is the address to the pixel we want to retrieve */
+  Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
 
-    switch(bpp) {
-    case 1:
-        return *p;
-        break;
+  switch(bpp) {
+  case 1:
+    return *p;
+    break;
 
-    case 2:
-        return *(Uint16 *)p;
-        break;
+  case 2:
+    return *(Uint16 *)p;
+    break;
 
-    case 3:
-        if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
-            return p[0] << 16 | p[1] << 8 | p[2];
-        else
-            return p[0] | p[1] << 8 | p[2] << 16;
-        break;
+  case 3:
+    if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
+      return p[0] << 16 | p[1] << 8 | p[2];
+    else
+      return p[0] | p[1] << 8 | p[2] << 16;
+    break;
 
-    case 4:
-        return *(Uint32 *)p;
-        break;
+  case 4:
+    return *(Uint32 *)p;
+    break;
 
-    default:
-        return 0;       /* shouldn't happen, but avoids warnings */
-    }
+  default:
+    return 0;       /* shouldn't happen, but avoids warnings */
+  }
 }
 
 void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 {
-    int bpp = surface->format->BytesPerPixel;
-    /* Here p is the address to the pixel we want to set */
-    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+  int bpp = surface->format->BytesPerPixel;
+  /* Here p is the address to the pixel we want to set */
+  Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
 
-    switch(bpp) {
-    case 1:
-        *p = pixel;
-        break;
+  switch(bpp) {
+  case 1:
+    *p = pixel;
+    break;
 
-    case 2:
-        *(Uint16 *)p = pixel;
-        break;
+  case 2:
+    *(Uint16 *)p = pixel;
+    break;
 
-    case 3:
-        if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-            p[0] = (pixel >> 16) & 0xff;
-            p[1] = (pixel >> 8) & 0xff;
-            p[2] = pixel & 0xff;
-        } else {
-            p[0] = pixel & 0xff;
-            p[1] = (pixel >> 8) & 0xff;
-            p[2] = (pixel >> 16) & 0xff;
-        }
-        break;
-
-    case 4:
-        *(Uint32 *)p = pixel;
-        break;
+  case 3:
+    if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+      p[0] = (pixel >> 16) & 0xff;
+      p[1] = (pixel >> 8) & 0xff;
+      p[2] = pixel & 0xff;
+    } else {
+      p[0] = pixel & 0xff;
+      p[1] = (pixel >> 8) & 0xff;
+      p[2] = (pixel >> 16) & 0xff;
     }
+    break;
+
+  case 4:
+    *(Uint32 *)p = pixel;
+    break;
+  }
 }
 
 SDL_Surface* load_image(char *filename)
@@ -180,9 +180,9 @@ SDL_Surface* load_image(char *filename)
   SDL_Surface *scaled = SDL_CreateRGBSurface(opt->flags, opt->w*SCALE, opt->h*SCALE, opt->format->BitsPerPixel,opt->format->Rmask, opt->format->Gmask, opt->format->Bmask, opt->format->Amask);
   for(sy = 0; sy < opt->h; sy++) //Run across all source Y pixels.
     for(sx = 0; sx < opt->w; sx++) //Run across all source X pixels.
-	    for(dy = 0; dy < SCALE; ++dy) //Draw SCALE pixels for each Y pixel.
-	        for(dx = 0; dx < SCALE; ++dx) //Draw SCALE pixels for each X pixel.
-	            putpixel(scaled, SCALE*sx + dx, SCALE*sy + dy, getpixel(opt, sx, sy));
+      for(dy = 0; dy < SCALE; ++dy) //Draw SCALE pixels for each Y pixel.
+	for(dx = 0; dx < SCALE; ++dx) //Draw SCALE pixels for each X pixel.
+	  putpixel(scaled, SCALE*sx + dx, SCALE*sy + dy, getpixel(opt, sx, sy));
 
   Uint32 colourkey = SDL_MapRGB(scaled->format, 0xFF, 0, 0xFF);
   SDL_SetColorKey(opt, SDL_SRCCOLORKEY, colourkey);
@@ -206,236 +206,236 @@ SDL_Surface* load_image(char *filename)
 
 int collision(struct Balls *ball, SDL_Rect *paddle) {
 
-// top surface collision
-float x1 = ball->loc.x;
-float y1 = ball->loc.y + ball->loc.h;
-float x2 = ball->loc.x + ball->vel.x;
-float y2 = ball->loc.y + ball->loc.h + ball->vel.y;
-float x3 = paddle->x - ball->loc.w;
-float y3 = paddle->y;
-float x4 = paddle->x + paddle->w;
-float y4 = paddle->y;
+  // top surface collision
+  float x1 = ball->loc.x;
+  float y1 = ball->loc.y + ball->loc.h;
+  float x2 = ball->loc.x + ball->vel.x;
+  float y2 = ball->loc.y + ball->loc.h + ball->vel.y;
+  float x3 = paddle->x - ball->loc.w;
+  float y3 = paddle->y;
+  float x4 = paddle->x + paddle->w;
+  float y4 = paddle->y;
 
-float denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
-float ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
-if ((ua < 0) || (ua > 1)) return 0;
-float ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
-if ((ub < 0) || (ub > 1)) return 0;
+  float denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
+  float ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
+  if ((ua < 0) || (ua > 1)) return 0;
+  float ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
+  if ((ub < 0) || (ub > 1)) return 0;
 
-float x = x1 + (ua * (x2-x1));
-float y = y1 + (ua * (y2-y1));
+  float x = x1 + (ua * (x2-x1));
+  float y = y1 + (ua * (y2-y1));
 
-/* calc % remaining after collision */
-float pct;
-if (abs(ball->vel.y) > abs(ball->vel.y)) pct = 1.0 - ((y-y1)/(y2-y1));
-else pct = 1.0 - ((x-x1)/(x2-x1));
+  /* calc % remaining after collision */
+  float pct;
+  if (abs(ball->vel.y) > abs(ball->vel.y)) pct = 1.0 - ((y-y1)/(y2-y1));
+  else pct = 1.0 - ((x-x1)/(x2-x1));
 
-/* 37 pixels of collision, x offset -5 through 31 relative to paddle */
-if (x - paddle->x < 1) { /* wide */
-  ball->vel.x = -4;
-  ball->vel.y = -2;
-} else if (x - paddle->x < 7) {
-  ball->vel.x = -3;
-  ball->vel.y = -3;
-} else if (x - paddle->x < 13) {
-  ball->vel.x = -2;
-  ball->vel.y = -4;
-} else if (x - paddle->x < 20) {
-  ball->vel.x = 2;
-  ball->vel.y = -4;
-} else if (x - paddle->x < 26) {
-  ball->vel.x = 3;
-  ball->vel.y = -3;
-} else if (x - paddle->x < 32) { /* wide */
-  ball->vel.x = 4;
-  ball->vel.y = -4;
-}
+  /* 37 pixels of collision, x offset -5 through 31 relative to paddle */
+  if (x - paddle->x < 1) { /* wide */
+    ball->vel.x = -4;
+    ball->vel.y = -2;
+  } else if (x - paddle->x < 7) {
+    ball->vel.x = -3;
+    ball->vel.y = -3;
+  } else if (x - paddle->x < 13) {
+    ball->vel.x = -2;
+    ball->vel.y = -4;
+  } else if (x - paddle->x < 20) {
+    ball->vel.x = 2;
+    ball->vel.y = -4;
+  } else if (x - paddle->x < 26) {
+    ball->vel.x = 3;
+    ball->vel.y = -3;
+  } else if (x - paddle->x < 32) { /* wide */
+    ball->vel.x = 4;
+    ball->vel.y = -4;
+  }
 
-/* advance a partial velocity amount */
-//ball->loc.y += (float) ball->vel.y * pct;
-//ball->loc.x += (float) ball->vel.x * pct;
+  /* advance a partial velocity amount */
+  //ball->loc.y += (float) ball->vel.y * pct;
+  //ball->loc.x += (float) ball->vel.x * pct;
 
-/* or force a render on the paddle -- better collision feel? */
-ball->loc.y = y - ball->loc.h - 1;
-ball->loc.x = x;
+  /* or force a render on the paddle -- better collision feel? */
+  ball->loc.y = y - ball->loc.h - 1;
+  ball->loc.x = x;
 
-return 1;
+  return 1;
 
 }
 
 int down_collide(struct Balls *ball, struct Bricks *brick) {
 
-float x1 = ball->loc.x;
-float y1 = ball->loc.y;
-float x2 = ball->loc.x + ball->vel.x;
-float y2 = ball->loc.y + ball->vel.y;
-float x3 = brick->loc.x - ball->loc.w;
-float y3 = brick->loc.y - ball->loc.h;
-float x4 = brick->loc.x + brick->loc.w;
-float y4 = brick->loc.y - ball->loc.h;
+  float x1 = ball->loc.x;
+  float y1 = ball->loc.y;
+  float x2 = ball->loc.x + ball->vel.x;
+  float y2 = ball->loc.y + ball->vel.y;
+  float x3 = brick->loc.x - ball->loc.w;
+  float y3 = brick->loc.y - ball->loc.h;
+  float x4 = brick->loc.x + brick->loc.w;
+  float y4 = brick->loc.y - ball->loc.h;
 
-float denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
-float ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
-if ((ua < 0) || (ua > 1)) return 0;
-float ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
-if ((ub < 0) || (ub > 1)) return 0;
+  float denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
+  float ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
+  if ((ua < 0) || (ua > 1)) return 0;
+  float ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
+  if ((ub < 0) || (ub > 1)) return 0;
 
-float x = x1 + (ua * (x2-x1));
-float y = y1 + (ua * (y2-y1));
+  float x = x1 + (ua * (x2-x1));
+  float y = y1 + (ua * (y2-y1));
 
-ball->vel.y *= -1;
+  ball->vel.y *= -1;
 
-/* calc % remaining after collision */
-float pct;
-if (abs(ball->vel.y) > abs(ball->vel.y)) pct = 1.0 - ((y-y1)/(y2-y1));
-else pct = 1.0 - ((x-x1)/(x2-x1));
+  /* calc % remaining after collision */
+  float pct;
+  if (abs(ball->vel.y) > abs(ball->vel.y)) pct = 1.0 - ((y-y1)/(y2-y1));
+  else pct = 1.0 - ((x-x1)/(x2-x1));
 
-/* advance a partial velocity amount */
-//ball->loc.y += (float) ball->vel.y * pct;
-//ball->loc.x += (float) ball->vel.x * pct;
+  /* advance a partial velocity amount */
+  //ball->loc.y += (float) ball->vel.y * pct;
+  //ball->loc.x += (float) ball->vel.x * pct;
 
-/* or force a render on the brick -- better collision feel? */
-ball->loc.y = y - 1;
-ball->loc.x = x;
-brick->type = 0;
+  /* or force a render on the brick -- better collision feel? */
+  ball->loc.y = y - 1;
+  ball->loc.x = x;
+  brick->type = 0;
 
-return 1;
+  return 1;
 
 }
 
 int up_collide(struct Balls *ball, struct Bricks *brick) {
 
-float x1 = ball->loc.x;
-float y1 = ball->loc.y;
-float x2 = ball->loc.x + ball->vel.x;
-float y2 = ball->loc.y + ball->vel.y;
-float x3 = brick->loc.x - ball->loc.w;
-float y3 = brick->loc.y + brick->loc.h;
-float x4 = brick->loc.x + brick->loc.w;
-float y4 = brick->loc.y + brick->loc.h;
+  float x1 = ball->loc.x;
+  float y1 = ball->loc.y;
+  float x2 = ball->loc.x + ball->vel.x;
+  float y2 = ball->loc.y + ball->vel.y;
+  float x3 = brick->loc.x - ball->loc.w;
+  float y3 = brick->loc.y + brick->loc.h;
+  float x4 = brick->loc.x + brick->loc.w;
+  float y4 = brick->loc.y + brick->loc.h;
 
-float denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
-float ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
-if ((ua < 0) || (ua > 1)) return 0;
-float ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
-if ((ub < 0) || (ub > 1)) return 0;
+  float denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
+  float ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
+  if ((ua < 0) || (ua > 1)) return 0;
+  float ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
+  if ((ub < 0) || (ub > 1)) return 0;
 
-float x = x1 + (ua * (x2-x1));
-float y = y1 + (ua * (y2-y1));
+  float x = x1 + (ua * (x2-x1));
+  float y = y1 + (ua * (y2-y1));
 
-ball->vel.y *= -1;
+  ball->vel.y *= -1;
 
-/* calc % remaining after collision */
-float pct;
-if (abs(ball->vel.y) > abs(ball->vel.y)) pct = 1.0 - ((y-y1)/(y2-y1));
-else pct = 1.0 - ((x-x1)/(x2-x1));
+  /* calc % remaining after collision */
+  float pct;
+  if (abs(ball->vel.y) > abs(ball->vel.y)) pct = 1.0 - ((y-y1)/(y2-y1));
+  else pct = 1.0 - ((x-x1)/(x2-x1));
 
-/* advance a partial velocity amount */
-//ball->loc.y += (float) ball->vel.y * pct;
-//ball->loc.x += (float) ball->vel.x * pct;
+  /* advance a partial velocity amount */
+  //ball->loc.y += (float) ball->vel.y * pct;
+  //ball->loc.x += (float) ball->vel.x * pct;
 
-/* or force a render on the brick -- better collision feel? */
-ball->loc.y = y + 1;
-ball->loc.x = x;
-brick->type = 0;
+  /* or force a render on the brick -- better collision feel? */
+  ball->loc.y = y + 1;
+  ball->loc.x = x;
+  brick->type = 0;
 
-return 1;
+  return 1;
 
 }
 
 int left_collide(struct Balls *ball, struct Bricks *brick) {
 
-float x1 = ball->loc.x;
-float y1 = ball->loc.y;
-float x2 = ball->loc.x + ball->vel.x;
-float y2 = ball->loc.y + ball->vel.y;
-float x3 = brick->loc.x + brick->loc.w;
-float y3 = brick->loc.y - ball->loc.h;
-float x4 = brick->loc.x + brick->loc.w;
-float y4 = brick->loc.y + brick->loc.h;
+  float x1 = ball->loc.x;
+  float y1 = ball->loc.y;
+  float x2 = ball->loc.x + ball->vel.x;
+  float y2 = ball->loc.y + ball->vel.y;
+  float x3 = brick->loc.x + brick->loc.w;
+  float y3 = brick->loc.y - ball->loc.h;
+  float x4 = brick->loc.x + brick->loc.w;
+  float y4 = brick->loc.y + brick->loc.h;
 
-float denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
-float ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
-if ((ua < 0) || (ua > 1)) return 0;
-float ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
-if ((ub < 0) || (ub > 1)) return 0;
+  float denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
+  float ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
+  if ((ua < 0) || (ua > 1)) return 0;
+  float ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
+  if ((ub < 0) || (ub > 1)) return 0;
 
-float x = x1 + (ua * (x2-x1));
-float y = y1 + (ua * (y2-y1));
+  float x = x1 + (ua * (x2-x1));
+  float y = y1 + (ua * (y2-y1));
 
-ball->vel.x *= -1;
+  ball->vel.x *= -1;
 
-/* calc % remaining after collision */
-float pct;
-if (abs(ball->vel.y) > abs(ball->vel.y)) pct = 1.0 - ((y-y1)/(y2-y1));
-else pct = 1.0 - ((x-x1)/(x2-x1));
+  /* calc % remaining after collision */
+  float pct;
+  if (abs(ball->vel.y) > abs(ball->vel.y)) pct = 1.0 - ((y-y1)/(y2-y1));
+  else pct = 1.0 - ((x-x1)/(x2-x1));
 
-/* advance a partial velocity amount */
-//ball->loc.y += (float) ball->vel.y * pct;
-//ball->loc.x += (float) ball->vel.x * pct;
+  /* advance a partial velocity amount */
+  //ball->loc.y += (float) ball->vel.y * pct;
+  //ball->loc.x += (float) ball->vel.x * pct;
 
-/* or force a render on the brick -- better collision feel? */
-ball->loc.y = y;
-ball->loc.x = x + 1;
-brick->type = 0;
+  /* or force a render on the brick -- better collision feel? */
+  ball->loc.y = y;
+  ball->loc.x = x + 1;
+  brick->type = 0;
 
-return 1;
+  return 1;
 
 }
 
 int right_collide(struct Balls *ball, struct Bricks *brick) {
 
-float x1 = ball->loc.x;
-float y1 = ball->loc.y;
-float x2 = ball->loc.x + ball->vel.x;
-float y2 = ball->loc.y + ball->vel.y;
-float x3 = brick->loc.x - ball->loc.w;
-float y3 = brick->loc.y - ball->loc.h;
-float x4 = brick->loc.x - ball->loc.w;
-float y4 = brick->loc.y + brick->loc.h;
+  float x1 = ball->loc.x;
+  float y1 = ball->loc.y;
+  float x2 = ball->loc.x + ball->vel.x;
+  float y2 = ball->loc.y + ball->vel.y;
+  float x3 = brick->loc.x - ball->loc.w;
+  float y3 = brick->loc.y - ball->loc.h;
+  float x4 = brick->loc.x - ball->loc.w;
+  float y4 = brick->loc.y + brick->loc.h;
 
-float denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
-float ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
-if ((ua < 0) || (ua > 1)) return 0;
-float ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
-if ((ub < 0) || (ub > 1)) return 0;
+  float denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
+  float ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
+  if ((ua < 0) || (ua > 1)) return 0;
+  float ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
+  if ((ub < 0) || (ub > 1)) return 0;
 
-float x = x1 + (ua * (x2-x1));
-float y = y1 + (ua * (y2-y1));
+  float x = x1 + (ua * (x2-x1));
+  float y = y1 + (ua * (y2-y1));
 
-ball->vel.x *= -1;
+  ball->vel.x *= -1;
 
-/* calc % remaining after collision */
-float pct;
-if (abs(ball->vel.y) > abs(ball->vel.y)) pct = 1.0 - ((y-y1)/(y2-y1));
-else pct = 1.0 - ((x-x1)/(x2-x1));
+  /* calc % remaining after collision */
+  float pct;
+  if (abs(ball->vel.y) > abs(ball->vel.y)) pct = 1.0 - ((y-y1)/(y2-y1));
+  else pct = 1.0 - ((x-x1)/(x2-x1));
 
-/* advance a partial velocity amount */
-//ball->loc.y += (float) ball->vel.y * pct;
-//ball->loc.x += (float) ball->vel.x * pct;
+  /* advance a partial velocity amount */
+  //ball->loc.y += (float) ball->vel.y * pct;
+  //ball->loc.x += (float) ball->vel.x * pct;
 
-/* or force a render on the brick -- better collision feel? */
-ball->loc.y = y;
-ball->loc.x = x - 1;
-brick->type = 0;
+  /* or force a render on the brick -- better collision feel? */
+  ball->loc.y = y;
+  ball->loc.x = x - 1;
+  brick->type = 0;
 
-return 1;
+  return 1;
 
 }
 
 int box_collide(struct Balls *ball, SDL_Rect *paddle) {
 
-int collision = 1;
+  int collision = 1;
 
-if (ball->loc.x + ball->loc.w < paddle->x) // R1 < L2
-  collision = 0;
-else if (ball->loc.x > paddle->x + paddle->w) // L1 > R2
-  collision = 0;
-else if (ball->loc.y > paddle->y + paddle->h) // U1 < D2
-  collision = 0;else if (ball->loc.y + ball->loc.h < paddle->y) // D1 > U2
-  collision = 0;
+  if (ball->loc.x + ball->loc.w < paddle->x) // R1 < L2
+    collision = 0;
+  else if (ball->loc.x > paddle->x + paddle->w) // L1 > R2
+    collision = 0;
+  else if (ball->loc.y > paddle->y + paddle->h) // U1 < D2
+    collision = 0;else if (ball->loc.y + ball->loc.h < paddle->y) // D1 > U2
+    collision = 0;
 
-return collision;
+  return collision;
 
 }
 
@@ -456,11 +456,11 @@ inline int there_yet(struct timespec *ts1, struct timespec *ts2) {
 }
 
 void Scale_Rect(SDL_Rect *srcrect, SDL_Rect *srcrect2) {
-	srcrect2->x = srcrect->x*SCALE;
-	srcrect2->y = srcrect->y*SCALE;
-	srcrect2->h = srcrect->h*SCALE;
-	srcrect2->w = srcrect->w*SCALE;
-	return;
+  srcrect2->x = srcrect->x*SCALE;
+  srcrect2->y = srcrect->y*SCALE;
+  srcrect2->h = srcrect->h*SCALE;
+  srcrect2->w = srcrect->w*SCALE;
+  return;
 }
 
 int main(int argc, char *argv[]) {
@@ -526,14 +526,14 @@ int main(int argc, char *argv[]) {
 
   struct Bricks brick[28][11];
   for (i=0; i<28; i++) {
-  	for (j=0; j<11; j++) {
-	    brick[i][j].loc.x = (FRAME_LEFT + j*16);
-	    brick[i][j].loc.y = (FRAME_TOP + i*8);
-	    brick[i][j].loc.h = 8;
-	    brick[i][j].loc.w = 16;
-	    brick[i][j].type = 0;
-	    if (i<=13) brick[i][j].type = 1;
-  	}
+    for (j=0; j<11; j++) {
+      brick[i][j].loc.x = (FRAME_LEFT + j*16);
+      brick[i][j].loc.y = (FRAME_TOP + i*8);
+      brick[i][j].loc.h = 8;
+      brick[i][j].loc.w = 16;
+      brick[i][j].type = 0;
+      if (i<=13) brick[i][j].type = 1;
+    }
   }
 
   make_lvl(argv[1], brick);
@@ -577,33 +577,33 @@ int main(int argc, char *argv[]) {
       keystate = SDL_GetKeyState(NULL);
       // continuous-response keys
       if((keystate[SDLK_LEFT]) && (!keystate[SDLK_RIGHT]))
-      {
-        paddle.x -= 5;
-        if (paddle.x < FRAME_LEFT) paddle.x = FRAME_LEFT;
-      }
+	{
+	  paddle.x -= 5;
+	  if (paddle.x < FRAME_LEFT) paddle.x = FRAME_LEFT;
+	}
       if((keystate[SDLK_RIGHT]) && (!keystate[SDLK_LEFT]))
-      {
-        paddle.x += 5;
-        if (paddle.x + paddle_size.w > FRAME_RIGHT) paddle.x = (FRAME_RIGHT - paddle_size.w);
-      }
+	{
+	  paddle.x += 5;
+	  if (paddle.x + paddle_size.w > FRAME_RIGHT) paddle.x = (FRAME_RIGHT - paddle_size.w);
+	}
 
       // paddle animation
       switch (frame % 28) {
-        case 0 ... 6:
-          paddle_size.y = 0;
-          break;
-        case 7 ... 13:
-          paddle_size.y = 8;
-          break;
-        case 14 ... 20:
-          paddle_size.y = 16;
-          break;
-        case 21 ... 27:
-          paddle_size.y = 24;
-          break;
+      case 0 ... 6:
+	paddle_size.y = 0;
+	break;
+      case 7 ... 13:
+	paddle_size.y = 8;
+	break;
+      case 14 ... 20:
+	paddle_size.y = 16;
+	break;
+      case 21 ... 27:
+	paddle_size.y = 24;
+	break;
       }
       struct SDL_Rect temp, temp2;
-    	Scale_Rect(&paddle_size, &temp);
+      Scale_Rect(&paddle_size, &temp);
       Scale_Rect(&paddle, &temp2);
       SDL_BlitSurface( gfx_paddle, &temp, screen, &temp2 );
 
@@ -623,58 +623,58 @@ int main(int argc, char *argv[]) {
         // ball bounces on the surface of the paddle (change angle and reflect)
         if ((ball[b].vel.y < 0) || (collision(&ball[b], &paddle) == 0)) {
 
-	        // brick collisions
-		int x_dir, bound_x1, bound_x2, y_dir, bound_y1, bound_y2;
-		      if (ball[b].vel.x > 0) {
-		      	x_dir = 1;
-		        bound_x1 = ((ball[b].loc.x + ball[b].loc.w - FRAME_LEFT)/(16));
-		        bound_x2 = x_dir+((ball[b].loc.x + ball[b].loc.w - FRAME_LEFT + ball[b].vel.x)/(16));
-		      }
-		      else {
-		      	x_dir = -1;
-		      	bound_x1 = ((ball[b].loc.x - FRAME_LEFT)/(16));
-		        bound_x2 = x_dir+((ball[b].loc.x - FRAME_LEFT + ball[b].vel.x)/(16));
-		      }
+	  // brick collisions
+	  int x_dir, bound_x1, bound_x2, y_dir, bound_y1, bound_y2;
+	  if (ball[b].vel.x > 0) {
+	    x_dir = 1;
+	    bound_x1 = ((ball[b].loc.x + ball[b].loc.w - FRAME_LEFT)/(16));
+	    bound_x2 = x_dir+((ball[b].loc.x + ball[b].loc.w - FRAME_LEFT + ball[b].vel.x)/(16));
+	  }
+	  else {
+	    x_dir = -1;
+	    bound_x1 = ((ball[b].loc.x - FRAME_LEFT)/(16));
+	    bound_x2 = x_dir+((ball[b].loc.x - FRAME_LEFT + ball[b].vel.x)/(16));
+	  }
 
-		      if (ball[b].vel.y > 0) {
-		      	y_dir = 1;
-		        bound_y1 = ((ball[b].loc.y + ball[b].loc.h - FRAME_TOP)/(8));
-		        bound_y2 = y_dir+((ball[b].loc.y + ball[b].loc.h - FRAME_TOP + ball[b].vel.y)/(8));
-		      }
-		      else {
-		      	y_dir = -1;
-		      	bound_y1 = ((ball[b].loc.y - FRAME_TOP)/(8));
-		        bound_y2 = y_dir+((ball[b].loc.y - FRAME_TOP + ball[b].vel.y)/(8));
-		      }
+	  if (ball[b].vel.y > 0) {
+	    y_dir = 1;
+	    bound_y1 = ((ball[b].loc.y + ball[b].loc.h - FRAME_TOP)/(8));
+	    bound_y2 = y_dir+((ball[b].loc.y + ball[b].loc.h - FRAME_TOP + ball[b].vel.y)/(8));
+	  }
+	  else {
+	    y_dir = -1;
+	    bound_y1 = ((ball[b].loc.y - FRAME_TOP)/(8));
+	    bound_y2 = y_dir+((ball[b].loc.y - FRAME_TOP + ball[b].vel.y)/(8));
+	  }
 
-			int hit = 0;
-			for (i=bound_y1; i!=bound_y2; i+=y_dir) {
-				for (j=bound_x1; j!=bound_x2; j+=x_dir) {
-					if (brick[i][j].type == 0) continue;
+	  int hit = 0;
+	  for (i=bound_y1; i!=bound_y2; i+=y_dir) {
+	    for (j=bound_x1; j!=bound_x2; j+=x_dir) {
+	      if (brick[i][j].type == 0) continue;
 
-					if (ball[b].vel.y < 0) up_collide(&ball[b], &brick[i][j]);
-					else down_collide(&ball[b], &brick[i][j]);
-					if (hit == 1) break;
+	      if (ball[b].vel.y < 0) up_collide(&ball[b], &brick[i][j]);
+	      else down_collide(&ball[b], &brick[i][j]);
+	      if (hit == 1) break;
 
-					if (ball[b].vel.x < 0) left_collide(&ball[b], &brick[i][j]);
-					else right_collide(&ball[b], &brick[i][j]);
-					if (hit == 1) break;
-				}
-				if (hit == 1) break;
-			}
+	      if (ball[b].vel.x < 0) left_collide(&ball[b], &brick[i][j]);
+	      else right_collide(&ball[b], &brick[i][j]);
+	      if (hit == 1) break;
+	    }
+	    if (hit == 1) break;
+	  }
 
-			if (hit == 0) hit = up_collide(&ball[b], &wall_U);
-			if (hit == 0) hit = down_collide(&ball[b], &wall_D);
-			if (hit == 0) hit = left_collide(&ball[b], &wall_L);
-			if (hit == 0) hit = right_collide(&ball[b], &wall_R);
+	  if (hit == 0) hit = up_collide(&ball[b], &wall_U);
+	  if (hit == 0) hit = down_collide(&ball[b], &wall_D);
+	  if (hit == 0) hit = left_collide(&ball[b], &wall_L);
+	  if (hit == 0) hit = right_collide(&ball[b], &wall_R);
 
-			// todo -- collide with the nearest brick
+	  // todo -- collide with the nearest brick
 
-			// no collisions -- move
-			if (hit == 0) {
-				ball[b].loc.x += ball[b].vel.x;
-				ball[b].loc.y += ball[b].vel.y;
-			}
+	  // no collisions -- move
+	  if (hit == 0) {
+	    ball[b].loc.x += ball[b].vel.x;
+	    ball[b].loc.y += ball[b].vel.y;
+	  }
         }
 
         // // ball bounces on the side walls (reflect x)
@@ -700,20 +700,20 @@ int main(int argc, char *argv[]) {
         SDL_BlitSurface( gfx_ball, NULL, screen, &temp );
       }
 
-	  for (i = 0; i < 28; i++) {
-	  	for (j=0; j<11; j++) {
-		     if (brick[i][j].type != 0)
-		       {
-			 struct SDL_Rect temp3;
-			 temp3.x = 0;
-			 temp3.y = (brick[i][j].type - 1) *8*SCALE;
-			 temp3.h = 8*SCALE;
-			 temp3.w = 16*SCALE;
-			 Scale_Rect(&brick[i][j].loc, &temp);
-			 SDL_BlitSurface( gfx_brick, &temp3, screen, &temp );
-		       }
-	  	}
-	  }
+      for (i = 0; i < 28; i++) {
+	for (j=0; j<11; j++) {
+	  if (brick[i][j].type != 0)
+	    {
+	      struct SDL_Rect temp3;
+	      temp3.x = 0;
+	      temp3.y = (brick[i][j].type - 1) *8*SCALE;
+	      temp3.h = 8*SCALE;
+	      temp3.w = 16*SCALE;
+	      Scale_Rect(&brick[i][j].loc, &temp);
+	      SDL_BlitSurface( gfx_brick, &temp3, screen, &temp );
+	    }
+	}
+      }
     }
 
     SDL_Flip( screen );
