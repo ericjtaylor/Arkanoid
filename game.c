@@ -463,7 +463,7 @@ void Scale_Rect(SDL_Rect *srcrect, SDL_Rect *srcrect2) {
 	return;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
   printf("Launching...\n");
 
   // inits
@@ -536,7 +536,7 @@ int main() {
   	}
   }
 
-  make_lvl("stages/stage1.lvl", brick);
+  make_lvl(argv[1], brick);
   
   struct Bricks wall_U, wall_D, wall_L, wall_R;
 
