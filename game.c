@@ -57,18 +57,21 @@ void make_lvl(char *stage, struct Bricks brix[][WELL_WIDTH])
   int c;
 
   f = fopen(stage, "r");
-  while (fgets (buf, sizeof(buf), f))
-    {
-      x = 0;
-      while (buf[x] != '\n' && x < WELL_WIDTH)
-	{
-	  c = buf[x] - '0'; // cast char to int
-	  brix[y][x].type = c;
-	  x++;
-	}
-      y++;
-    }
-  fclose(f);
+  if (f != NULL) {
+	  while (fgets (buf, sizeof(buf), f))
+	    {
+	      x = 0;
+	      while (buf[x] != '\n' && x < WELL_WIDTH)
+			{
+			  c = buf[x] - '0'; // cast char to int
+			  brix[y][x].type = c;
+			  x++;
+			}
+	      y++;
+	    }
+	  fclose(f);
+  } else printf("Unable to load '%s'\n", stage);
+  return;
 }
 
 // polls for button press by reading the state of a hardware file.
@@ -536,7 +539,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  make_lvl(argv[1], brick);
+  if (argc > 1) make_lvl(argv[1], brick);
   
   struct Bricks wall_U, wall_D, wall_L, wall_R;
 
