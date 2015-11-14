@@ -30,7 +30,7 @@ const int FRAME_BOTTOM = 240;
 const int BALLS = 1;
 const int WELL_WIDTH = 11;
 const int WELL_HEIGHT = 28;
-const int TICKS_PER_FRAME = 0x20000*1;
+const int TICKS_PER_FRAME = 0x20000*6;
 
 struct Vector  {
   int x;
@@ -212,13 +212,13 @@ int box_collide(struct Balls *ball, SDL_Rect *paddle) {
 
   int collision = 1;
 
-  if (ball->loc.x + ball->direction.x + ball->loc.w < paddle->x) // R1 < L2
+  if (ball->loc.x + (ball->loc.w - 1) < paddle->x) // R1 < L2
   collision = 0;
-  else if (ball->loc.x + ball->direction.x > paddle->x + paddle->w) // L1 > R2
+  else if (ball->loc.x > paddle->x + (paddle->w - 1)) // L1 > R2
   collision = 0;
-  else if (ball->loc.y + ball->direction.y > paddle->y + paddle->h) // U1 < D2
+  else if (ball->loc.y > paddle->y + (paddle->h - 1)) // U1 < D2
   collision = 0;
-  else if (ball->loc.y + ball->direction.y + ball->loc.h < paddle->y) // D1 > U2
+  else if (ball->loc.y + (ball->loc.h - 1) < paddle->y) // D1 > U2
   collision = 0;
 
   return collision;
@@ -400,127 +400,153 @@ int main(int argc, char *argv[]) {
       int b;
       for(b = 0; b < BALLS; b++) {
 
+//         // check for paddle hits
+//         if (box_collide(&ball[b], &paddle)) {
+//           if (ball[b].direction.y == 1) {
+//             ball[b].direction.y = -1;
+// //            brick_inner.y = 8 - brick_inner.y;
+//           }
+//           // ran into the side
+//           if (ball[b].loc.y + (ball[b].loc.h - 1) >= paddle.y) {
+//             ball[b].ticks_max.x = 0x194C6;
+//             ball[b].ticks_max.y = 0x3298C;
+//             switch (ball[b].loc.x - paddle.x) {
+//               case -7 ... 12:
+//               printf("inner paddle left\n");
+//               if (ball[b].direction.x == 1) {
+//                   ball[b].direction.x = -1;
+// //                  brick_inner.x = 16 - brick_inner.x;
+//               }
+//               break;
+//               case 13 ... 33: /* wide */
+//               printf("inner paddle right\n");;
+//               if (ball[b].direction.x == -1) {
+//                   ball[b].direction.x = 1;
+// //                  brick_inner.x = 16 - brick_inner.x;
+//               }
+//               break;
+//               default:
+//               printf("********** invalid inner paddle hit x delta = %d\n", ball[b].loc.x - paddle.x);
+//             }
+//             // surface hit -- 37 pixels of collision, x offset -5 through 31 relative to paddle
+//           } else {
+//             ball[b].ticks.x = 0;
+//             ball[b].ticks.y = 0;
+//             switch (ball[b].loc.x - paddle.x) {
+//               case -6 ... 0: /* wide */
+//               printf("wide left\n");
+//               if (ball[b].direction.x == 1) {
+//                   ball[b].direction.x = -1;
+// //                  brick_inner.x = 16 - brick_inner.x;
+//               }
+//               ball[b].ticks_max.x = 0x194C6;
+//               ball[b].ticks_max.y = 0x3298C;
+//               break;
+//               case 1 ... 6:
+//               printf("left\n");
+//               if (ball[b].direction.x == 1) {
+//                   ball[b].direction.x = -1;
+// //                  brick_inner.x = 16 - brick_inner.x;
+//               }
+//               ball[b].ticks_max.x = 0x20000;
+//               ball[b].ticks_max.y = 0x20000;
+//               break;
+//               case 7 ... 12:
+//               printf("tall left\n");
+//               if (ball[b].direction.x == 1) {
+//                   ball[b].direction.x = -1;
+// //                  brick_inner.x = 16 - brick_inner.x;
+//               }
+//               ball[b].ticks_max.x = 0x3298C;
+//               ball[b].ticks_max.y = 0x194C6;
+//               break;
+//               case 13 ... 19:
+//               printf("tall right\n");
+//               if (ball[b].direction.x == -1) {
+//                   ball[b].direction.x = 1;
+// //                  brick_inner.x = 16 - brick_inner.x;
+//               }
+//               ball[b].ticks_max.x = 0x3298C;
+//               ball[b].ticks_max.y = 0x194C6;
+//               break;
+//               case 20 ... 25:
+//               printf("right\n");
+//               if (ball[b].direction.x == -1) {
+//                   ball[b].direction.x = 1;
+// //                  brick_inner.x = 16 - brick_inner.x;
+//               }
+//               ball[b].ticks_max.x = 0x20000;
+//               ball[b].ticks_max.y = 0x20000;
+//               break;
+//               case 26 ... 33: /* wide */
+//               printf("wide right\n");
+//               if (ball[b].direction.x == -1) {
+//                   ball[b].direction.x = 1;
+// //                  brick_inner.x = 16 - brick_inner.x;
+//               }
+//               ball[b].ticks_max.x = 0x194C6;
+//               ball[b].ticks_max.y = 0x3298C;
+//               break;
+//               default:
+//               printf("********** invalid paddle hit x delta = %d\n", ball[b].loc.x - paddle.x);
+//             }
+//           }
+//         }
+
         // find where we are in relation to the brick grid
         int ticks;
         struct Vector brick_coord, brick_inner;
         if (ball[b].direction.x == 1) {
-          brick_coord.x = ((ball[b].loc.x + ball[b].loc.w - FRAME_LEFT) / 0x10);
-          brick_inner.x = ((ball[b].loc.x + ball[b].loc.w - FRAME_LEFT) & 0x0F);
+          brick_coord.x = ((ball[b].loc.x + (ball[b].loc.w - 1) - FRAME_LEFT) / 0x10);
+          brick_inner.x = ((ball[b].loc.x + (ball[b].loc.w - 1) - FRAME_LEFT) & 0x0F);
         } else {
           brick_coord.x = ((ball[b].loc.x - FRAME_LEFT) / 0x10);
           brick_inner.x = 0x0F - ((ball[b].loc.x - FRAME_LEFT) & 0x0F);
         }
         if (ball[b].direction.y == 1) {
-          brick_coord.y = ((ball[b].loc.y + ball[b].loc.h - FRAME_TOP) / 0x08);
-          brick_inner.y = ((ball[b].loc.y + ball[b].loc.h - FRAME_TOP) & 0x07);
+          brick_coord.y = ((ball[b].loc.y + (ball[b].loc.h - 1) - FRAME_TOP) / 0x08);
+          brick_inner.y = ((ball[b].loc.y + (ball[b].loc.h - 1) - FRAME_TOP) & 0x07);
         } else {
           brick_coord.y = ((ball[b].loc.y - FRAME_TOP) / 0x08);
           brick_inner.y = 0x07 - ((ball[b].loc.y - FRAME_TOP) & 0x07);
         }
 
-        // check for paddle hits
-        if (box_collide(&ball[b], &paddle)) {
-          if (ball[b].direction.y == 1) {
-            ball[b].direction.y = -1;
-            brick_inner.y = 8 - brick_inner.y;
-          }
-          // ran into the side
-          if (ball[b].loc.y + ball[b].loc.h >= paddle.y) {
-            ball[b].ticks_max.x = 0x194C6;
-            ball[b].ticks_max.y = 0x3298C;
-            switch (ball[b].loc.x - paddle.x) {
-              case -7 ... 12:
-              printf("inner paddle left\n");
-              if (ball[b].direction.x == 1) {
-                  ball[b].direction.x = -1;
-                  brick_inner.x = 16 - brick_inner.x;
-              }
-              break;
-              case 13 ... 33: /* wide */
-              printf("inner paddle right\n");;
-              if (ball[b].direction.x == -1) {
-                  ball[b].direction.x = 1;
-                  brick_inner.x = 16 - brick_inner.x;
-              }
-              break;
-              default:
-              printf("********** invalid inner paddle hit x delta = %d\n", ball[b].loc.x - paddle.x);
-            }
-            // surface hit -- 37 pixels of collision, x offset -5 through 31 relative to paddle
-          } else {
-            ball[b].ticks.x = 0;
-            ball[b].ticks.y = 0;
-            switch (ball[b].loc.x - paddle.x) {
-              case -6 ... 0: /* wide */
-              printf("wide left\n");
-              if (ball[b].direction.x == 1) {
-                  ball[b].direction.x = -1;
-                  brick_inner.x = 16 - brick_inner.x;
-              }
-              ball[b].ticks_max.x = 0x194C6;
-              ball[b].ticks_max.y = 0x3298C;
-              break;
-              case 1 ... 6:
-              printf("left\n");
-              if (ball[b].direction.x == 1) {
-                  ball[b].direction.x = -1;
-                  brick_inner.x = 16 - brick_inner.x;
-              }
-              ball[b].ticks_max.x = 0x20000;
-              ball[b].ticks_max.y = 0x20000;
-              break;
-              case 7 ... 12:
-              printf("tall left\n");
-              if (ball[b].direction.x == 1) {
-                  ball[b].direction.x = -1;
-                  brick_inner.x = 16 - brick_inner.x;
-              }
-              ball[b].ticks_max.x = 0x3298C;
-              ball[b].ticks_max.y = 0x194C6;
-              break;
-              case 13 ... 19:
-              printf("tall right\n");
-              if (ball[b].direction.x == -1) {
-                  ball[b].direction.x = 1;
-                  brick_inner.x = 16 - brick_inner.x;
-              }
-              ball[b].ticks_max.x = 0x3298C;
-              ball[b].ticks_max.y = 0x194C6;
-              break;
-              case 20 ... 25:
-              printf("right\n");
-              if (ball[b].direction.x == -1) {
-                  ball[b].direction.x = 1;
-                  brick_inner.x = 16 - brick_inner.x;
-              }
-              ball[b].ticks_max.x = 0x20000;
-              ball[b].ticks_max.y = 0x20000;
-              break;
-              case 26 ... 33: /* wide */
-              printf("wide right\n");
-              if (ball[b].direction.x == -1) {
-                  ball[b].direction.x = 1;
-                  brick_inner.x = 16 - brick_inner.x;
-              }
-              ball[b].ticks_max.x = 0x194C6;
-              ball[b].ticks_max.y = 0x3298C;
-              break;
-              default:
-              printf("********** invalid paddle hit x delta = %d\n", ball[b].loc.x - paddle.x);
-            }
-          }
-        }
+int counter = 0;
 
         // move 1 pixel at a time
         while(ticks_remaining) {
           int move_x = 0;
           int move_y = 0;
-          int hit = 0;
+          int hit_x = 0;
+          int hit_y = 0;
+
+struct Vector brick_coord_t, brick_inner_t;
+if (ball[b].direction.x == 1) {
+  brick_coord_t.x = ((ball[b].loc.x + ball[b].loc.w-1 - FRAME_LEFT) / 0x10);
+  brick_inner_t.x = ((ball[b].loc.x + ball[b].loc.w-1 - FRAME_LEFT) & 0x0F);
+} else {
+  brick_coord_t.x = ((ball[b].loc.x - FRAME_LEFT) / 0x10);
+  brick_inner_t.x = 0x0F - ((ball[b].loc.x - FRAME_LEFT) & 0x0F);
+}
+if (ball[b].direction.y == 1) {
+  brick_coord_t.y = ((ball[b].loc.y + ball[b].loc.h-1 - FRAME_TOP) / 0x08);
+  brick_inner_t.y = ((ball[b].loc.y + ball[b].loc.h-1 - FRAME_TOP) & 0x07);
+} else {
+  brick_coord_t.y = ((ball[b].loc.y - FRAME_TOP) / 0x08);
+  brick_inner_t.y = 0x07 - ((ball[b].loc.y - FRAME_TOP) & 0x07);
+}
+
+counter++;
+printf("frame %d.%d - (%d,%d) -> (%d,%d)\n", frame, counter, brick_coord_t.x, brick_coord_t.y, brick_inner_t.x, brick_inner_t.y);
+if(brick_inner_t.x != brick_inner.x || brick_inner_t.y != brick_inner.y)
+  printf("frame %d.%d: inner x mismatch - running calc =  %d,%d\n", frame, counter, brick_inner.x, brick_inner.y);
+if(brick_coord_t.x != brick_coord.x || brick_coord_t.y != brick_coord.y)
+  printf("frame %d.%d: outer x mismatch - running calc = %d,%d\n", frame, counter, brick_coord.x, brick_coord.y);
 
           // check for movement
-          if (ticks_remaining >= 0x10000){
-            ticks = 0x10000;
-            ticks_remaining -= 0x10000;
+          if (ticks_remaining >= 0x20000){
+            ticks = 0x20000;
+            ticks_remaining -= 0x20000;
           } else {
             ticks = ticks_remaining;
             ticks_remaining = 0;
@@ -538,74 +564,105 @@ int main(int argc, char *argv[]) {
           if (move_x) brick_inner.x++;
           if (move_y) brick_inner.y++;
           if (move_y == 0 && move_x == 0) continue;
-
-          // check for horizontal surface hits
+          // check for vertical surface hits
           if (brick_inner.x == 16) {
-            if (brick_coord.x + ball[b].direction.x < 0 || brick_coord.x + ball[b].direction.x >= WELL_WIDTH) {
-              hit = 1;
-              ball[b].direction.x *= -1;
-              brick_inner.x = 16 - brick_inner.x;
+            if (brick_coord.x + ball[b].direction.x < 0 || brick_coord.x + ball[b].direction.x > WELL_WIDTH - 1) {
+              hit_y = 1;
+              printf("frame %d: hit vert wall\n", frame);
             } else {
               if (brick[brick_coord.y][brick_coord.x + ball[b].direction.x].type != 0) {
-                hit = 1;
+                hit_y = 1;
+                printf("frame %d: hit vert brick\n", frame);
                 brick[brick_coord.y][brick_coord.x + ball[b].direction.x].type = 0;
-                ball[b].direction.x *= -1;
-                brick_inner.x = 16 - brick_inner.x;
               }
               // splashover
               if (brick_inner.y < ball[b].loc.h && (brick_coord.y - ball[b].direction.y) >= 0 && (brick_coord.y - ball[b].direction.y) < SCREEN_HEIGHT) {
                 if (brick[brick_coord.y - ball[b].direction.y][brick_coord.x + ball[b].direction.x].type != 0) {
-                  hit = 1;
+                  hit_y = 1;
+                  printf("frame %d: hit vert brick splash\n", frame);
                   brick[brick_coord.y - ball[b].direction.y][brick_coord.x + ball[b].direction.x].type = 0;
-                  ball[b].direction.x *= -1;
-                  brick_inner.x = 16 - brick_inner.x;
                 }
               }
             }
           }
-          // check for vertical surface hits
+          // check for horizontal surface hits
           if (brick_inner.y == 8) {
             if (brick_coord.y + ball[b].direction.y < 0) {
-              hit = 1;
-              ball[b].direction.y *= -1;
-              brick_inner.y = 8 - brick_inner.y;
-            } else if (brick_coord.y + ball[b].direction.y >= WELL_HEIGHT) {
+              hit_x = 1;
+              printf("frame %d: hit top wall\n", frame);
+             } else if (brick_coord.y + ball[b].direction.y > WELL_HEIGHT - 1) {
               /******* bottom of screen bounce -- remove at some point *******/
-              hit = 1;
-              ball[b].direction.y *= -1;
-              brick_inner.y = 8 - brick_inner.y;
+              hit_x = 1;
+              printf("frame %d: hit bottom wall\n", frame);
             } else {
               if (brick[brick_coord.y + ball[b].direction.y][brick_coord.x].type != 0) {
-                hit = 1;
+                hit_x = 1;
+                printf("frame %d: hit hori brick\n", frame);
                 brick[brick_coord.y + ball[b].direction.y][brick_coord.x].type = 0;
-                ball[b].direction.y *= -1;
-                brick_inner.y = 8 - brick_inner.y;
               }
               // splashover
               if (brick_inner.x < ball[b].loc.w && (brick_coord.x - ball[b].direction.x) >= 0 && (brick_coord.x - ball[b].direction.x) < SCREEN_WIDTH) {
                 if (brick[brick_coord.y + ball[b].direction.y][brick_coord.x - ball[b].direction.x].type != 0) {
-                  hit = 1;
+                  hit_x = 1;
+                  printf("frame %d: hit hori brick splash\n", frame);
                   brick[brick_coord.y + ball[b].direction.y][brick_coord.x - ball[b].direction.x].type = 0;
-                  ball[b].direction.y *= -1;
-                  brick_inner.y = 8 - brick_inner.y;
                 }
               }
             }
           }
           // check for corner hits (out of bounds should have already triggered a hit)
-          if (brick_inner.x == 16 && brick_inner.y == 8 && hit == 0) {
+          if (brick_inner.x == 16 && brick_inner.y == 8 && hit_x == 0 && hit_y == 0) {
             if (brick[brick_coord.y + ball[b].direction.y][brick_coord.x + ball[b].direction.x].type != 0) {
-              hit = 1;
+              hit_x = 1;
+              hit_y = 1;
+              printf("frame %d: hit corner\n", frame);
               brick[brick_coord.y + ball[b].direction.y][brick_coord.x + ball[b].direction.x].type = 0;
-              ball[b].direction.x *= -1;
-              brick_inner.x = 16 - brick_inner.x;
-              ball[b].direction.y *= -1;
-              brick_inner.y = 8 - brick_inner.y;
+            }
+          }
+          // check for paddle surface hits
+          if(move_x == 1 || move_y == 1) {
+            struct Balls temp_ball;
+            temp_ball.loc.x = ball[b].loc.x + (move_x*ball[b].direction.x);
+            temp_ball.loc.y = ball[b].loc.y;
+            temp_ball.loc.h = ball[b].loc.h;
+            temp_ball.loc.w = ball[b].loc.w;
+            if (box_collide(&temp_ball, &paddle)) {
+              hit_y = 1;
+              printf("frame %d: hit paddle side\n", frame);
+              ball[b].ticks_max.x = 0x194C6;
+							ball[b].ticks_max.y = 0x3298C;
+            } else {
+              temp_ball.loc.y = ball[b].loc.y + (move_y*ball[b].direction.y);
+              if (box_collide(&temp_ball, &paddle)) {
+                hit_x = 1;
+                printf("frame %d: hit paddle surface\n", frame);
+              }
             }
           }
 
+          // reflect if hit
+          if (hit_x) {
+            ball[b].direction.y *= -1;
+            if (move_x == 1 && hit_y == 0) brick_inner.x--;
+            brick_inner.y = (8 - brick_inner.y + ball[b].loc.h - 1);
+            if (brick_inner.y == 8) {
+              brick_coord.y += ball[b].direction.y;
+              brick_inner.y = 0;
+            }
+
+          }
+          if (hit_y) {
+            ball[b].direction.x *= -1;
+            if (move_y == 1 && hit_x == 0) brick_inner.y--;
+            brick_inner.x = (16 - brick_inner.x + ball[b].loc.w - 1);
+            if (brick_inner.x == 16) {
+                brick_coord.x += ball[b].direction.x;
+                brick_inner.x = 0;
+              }
+          }
+
           // move if no hits
-          if (hit == 0) {
+          if (hit_x == 0 && hit_y == 0) {
             if (move_x) {
               ball[b].loc.x += ball[b].direction.x;
               if (brick_inner.x == 16) {
