@@ -9,14 +9,14 @@
 #include "gpio.h"
 
 /* TODO
-test flat double hits
-test concave double hits
-test corner rebounds
-test dynamic ball speeds
+   test flat double hits
+   test concave double hits
+   test corner rebounds
+   test dynamic ball speeds
 */
 
 /* IMPROVEMENTS
-complete
+   complete
 */
 
 //Screen dimension constants
@@ -63,16 +63,16 @@ void make_lvl(char *stage, struct Bricks brix[][WELL_WIDTH])
   f = fopen(stage, "r");
   if (f != NULL) {
     while (fgets (buf, sizeof(buf), f))
-    {
-      x = 0;
-      while (buf[x] != '\n' && x < WELL_WIDTH)
       {
-        c = buf[x] - '0'; // cast char to int
-        brix[y][x].type = c;
-        x++;
+	x = 0;
+	while (buf[x] != '\n' && x < WELL_WIDTH)
+	  {
+	    c = buf[x] - '0'; // cast char to int
+	    brix[y][x].type = c;
+	    x++;
+	  }
+	y++;
       }
-      y++;
-    }
     fclose(f);
   } else printf("Unable to load '%s'\n", stage);
   return;
@@ -87,26 +87,26 @@ Uint32 getpixel(SDL_Surface *surface, int x, int y)
   Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
 
   switch(bpp) {
-    case 1:
+  case 1:
     return *p;
     break;
 
-    case 2:
+  case 2:
     return *(Uint16 *)p;
     break;
 
-    case 3:
+  case 3:
     if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
-    return p[0] << 16 | p[1] << 8 | p[2];
+      return p[0] << 16 | p[1] << 8 | p[2];
     else
-    return p[0] | p[1] << 8 | p[2] << 16;
+      return p[0] | p[1] << 8 | p[2] << 16;
     break;
 
-    case 4:
+  case 4:
     return *(Uint32 *)p;
     break;
 
-    default:
+  default:
     return 0;       /* shouldn't happen, but avoids warnings */
   }
 }
@@ -118,15 +118,15 @@ void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
   Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
 
   switch(bpp) {
-    case 1:
+  case 1:
     *p = pixel;
     break;
 
-    case 2:
+  case 2:
     *(Uint16 *)p = pixel;
     break;
 
-    case 3:
+  case 3:
     if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
       p[0] = (pixel >> 16) & 0xff;
       p[1] = (pixel >> 8) & 0xff;
@@ -138,7 +138,7 @@ void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
     }
     break;
 
-    case 4:
+  case 4:
     *(Uint32 *)p = pixel;
     break;
   }
@@ -154,10 +154,10 @@ SDL_Surface* load_image(char *filename)
   Sint16 sy, sx, dy, dx;
   SDL_Surface *scaled = SDL_CreateRGBSurface(opt->flags, opt->w*SCALE, opt->h*SCALE, opt->format->BitsPerPixel,opt->format->Rmask, opt->format->Gmask, opt->format->Bmask, opt->format->Amask);
   for(sy = 0; sy < opt->h; sy++) //Run across all source Y pixels.
-  for(sx = 0; sx < opt->w; sx++) //Run across all source X pixels.
-  for(dy = 0; dy < SCALE; ++dy) //Draw SCALE pixels for each Y pixel.
-  for(dx = 0; dx < SCALE; ++dx) //Draw SCALE pixels for each X pixel.
-  putpixel(scaled, SCALE*sx + dx, SCALE*sy + dy, getpixel(opt, sx, sy));
+    for(sx = 0; sx < opt->w; sx++) //Run across all source X pixels.
+      for(dy = 0; dy < SCALE; ++dy) //Draw SCALE pixels for each Y pixel.
+	for(dx = 0; dx < SCALE; ++dx) //Draw SCALE pixels for each X pixel.
+	  putpixel(scaled, SCALE*sx + dx, SCALE*sy + dy, getpixel(opt, sx, sy));
 
   Uint32 colourkey = SDL_MapRGB(scaled->format, 0xFF, 0, 0xFF);
   SDL_SetColorKey(opt, SDL_SRCCOLORKEY, colourkey);
@@ -184,13 +184,13 @@ int box_collide(struct Balls *ball, SDL_Rect *paddle) {
   int collision = 1;
 
   if (ball->loc.x + (ball->loc.w - 1) < paddle->x) // R1 < L2
-  collision = 0;
+    collision = 0;
   else if (ball->loc.x > paddle->x + (paddle->w - 1)) // L1 > R2
-  collision = 0;
+    collision = 0;
   else if (ball->loc.y > paddle->y + (paddle->h - 1)) // U1 < D2
-  collision = 0;
+    collision = 0;
   else if (ball->loc.y + (ball->loc.h - 1) < paddle->y) // D1 > U2
-  collision = 0;
+    collision = 0;
 
   return collision;
 
@@ -332,90 +332,90 @@ int main(int argc, char *argv[]) {
       clock_gettime (CLOCK_MONOTONIC, &time_ns);
     }
 
-    if ((gpio_exists == true) && gpio_poll() == 0) {
-      SDL_BlitSurface( gfx_bg, NULL, screen, NULL );
-      keystate = SDL_GetKeyState(NULL);
-      // continuous-response keys
-      if((keystate[SDLK_LEFT]) && (!keystate[SDLK_RIGHT]))
+
+    SDL_BlitSurface( gfx_bg, NULL, screen, NULL );
+    keystate = SDL_GetKeyState(NULL);
+    // continuous-response keys
+    if((keystate[SDLK_LEFT]) && (!keystate[SDLK_RIGHT]))
       {
         paddle.x -= 5;
         if (paddle.x < FRAME_LEFT) paddle.x = FRAME_LEFT;
       }
-      if((keystate[SDLK_RIGHT]) && (!keystate[SDLK_LEFT]))
+    if((keystate[SDLK_RIGHT]) && (!keystate[SDLK_LEFT]))
       {
         paddle.x += 5;
         if (paddle.x + paddle_size.w > FRAME_RIGHT) paddle.x = (FRAME_RIGHT - paddle_size.w);
       }
 
-      // paddle animation
-      switch (frame % 28) {
-        case 0 ... 6:
-	        paddle_size.y = 0;
-	        break;
-        case 7 ... 13:
-	        paddle_size.y = 8;
-	        break;
-        case 14 ... 20:
-	        paddle_size.y = 16;
-	        break;
-        case 21 ... 27:
-	        paddle_size.y = 24;
-	        break;
+    // paddle animation
+    switch (frame % 28) {
+    case 0 ... 6:
+      paddle_size.y = 0;
+      break;
+    case 7 ... 13:
+      paddle_size.y = 8;
+      break;
+    case 14 ... 20:
+      paddle_size.y = 16;
+      break;
+    case 21 ... 27:
+      paddle_size.y = 24;
+      break;
+    }
+
+    struct SDL_Rect temp, temp2;
+    Scale_Rect(&paddle_size, &temp);
+    Scale_Rect(&paddle, &temp2);
+    SDL_BlitSurface( gfx_paddle, &temp, screen, &temp2 );
+
+    int b;
+    for(b = 0; b < BALLS; b++) {
+
+      // check for the paddle moving into the ball
+      int penetration = 0;
+      if (box_collide(&ball[b], &paddle)) {
+	ball[b].direction.y = -1;
+	ball[b].ticks_max.x = 0x194C6;
+	ball[b].ticks_max.y = 0x3298C;
+	penetration = ball[b].loc.y + ball[b].loc.h - paddle.y;
+	switch (ball[b].loc.x - paddle.x) {
+	case -5 ... 12:
+	  printf("hit paddle inner paddle left\n");
+	  ball[b].direction.x = -1;
+	  break;
+	case 13 ... 31: /* wide */
+	  printf("hit paddle inner paddle right\n");;
+	  ball[b].direction.x = 1;
+	  break;
+	default:
+	  printf("********** invalid inner paddle hit x delta = %d\n", ball[b].loc.x - paddle.x);
+	}
+	ball[b].loc.x += ball[b].direction.x * penetration;
+	if (ball[b].loc.x <= FRAME_LEFT) ball[b].loc.x = FRAME_LEFT + 1;
+	else if (ball[b].loc.x + (ball[b].loc.w - 1) >= FRAME_RIGHT) ball[b].loc.x = FRAME_RIGHT - ball[b].loc.w;
+	ball[b].loc.y += ball[b].direction.y * penetration;
       }
 
-      struct SDL_Rect temp, temp2;
-      Scale_Rect(&paddle_size, &temp);
-      Scale_Rect(&paddle, &temp2);
-      SDL_BlitSurface( gfx_paddle, &temp, screen, &temp2 );
+      // find where we are in relation to the brick grid
+      int ticks;
+      struct Vector brick_coord, brick_inner;
+      if (ball[b].direction.x == 1) {
+	brick_coord.x = ((ball[b].loc.x + (ball[b].loc.w - 1) - FRAME_LEFT) / 0x10);
+	brick_inner.x = ((ball[b].loc.x + (ball[b].loc.w - 1) - FRAME_LEFT) & 0x0F);
+      } else {
+	brick_coord.x = ((ball[b].loc.x - FRAME_LEFT) / 0x10);
+	brick_inner.x = 0x0F - ((ball[b].loc.x - FRAME_LEFT) & 0x0F);
+      }
+      if (ball[b].direction.y == 1) {
+	brick_coord.y = ((ball[b].loc.y + (ball[b].loc.h - 1) - FRAME_TOP) / 0x08);
+	brick_inner.y = ((ball[b].loc.y + (ball[b].loc.h - 1) - FRAME_TOP) & 0x07);
+      } else {
+	brick_coord.y = ((ball[b].loc.y - FRAME_TOP) / 0x08);
+	brick_inner.y = 0x07 - ((ball[b].loc.y - FRAME_TOP) & 0x07);
+      }
 
-      int b;
-      for(b = 0; b < BALLS; b++) {
-
-        // check for the paddle moving into the ball
-        int penetration = 0;
-        if (box_collide(&ball[b], &paddle)) {
-          ball[b].direction.y = -1;
-          ball[b].ticks_max.x = 0x194C6;
-          ball[b].ticks_max.y = 0x3298C;
-          penetration = ball[b].loc.y + ball[b].loc.h - paddle.y;
-          switch (ball[b].loc.x - paddle.x) {
-            case -5 ... 12:
-            	printf("hit paddle inner paddle left\n");
-              ball[b].direction.x = -1;
-            	break;
-            case 13 ... 31: /* wide */
-            	printf("hit paddle inner paddle right\n");;
-              ball[b].direction.x = 1;
-            	break;
-            default:
-            	printf("********** invalid inner paddle hit x delta = %d\n", ball[b].loc.x - paddle.x);
-          }
-          ball[b].loc.x += ball[b].direction.x * penetration;
-          if (ball[b].loc.x <= FRAME_LEFT) ball[b].loc.x = FRAME_LEFT + 1;
-          else if (ball[b].loc.x + (ball[b].loc.w - 1) >= FRAME_RIGHT) ball[b].loc.x = FRAME_RIGHT - ball[b].loc.w;
-          ball[b].loc.y += ball[b].direction.y * penetration;
-        }
-
-        // find where we are in relation to the brick grid
-        int ticks;
-        struct Vector brick_coord, brick_inner;
-        if (ball[b].direction.x == 1) {
-          brick_coord.x = ((ball[b].loc.x + (ball[b].loc.w - 1) - FRAME_LEFT) / 0x10);
-          brick_inner.x = ((ball[b].loc.x + (ball[b].loc.w - 1) - FRAME_LEFT) & 0x0F);
-        } else {
-          brick_coord.x = ((ball[b].loc.x - FRAME_LEFT) / 0x10);
-          brick_inner.x = 0x0F - ((ball[b].loc.x - FRAME_LEFT) & 0x0F);
-        }
-        if (ball[b].direction.y == 1) {
-          brick_coord.y = ((ball[b].loc.y + (ball[b].loc.h - 1) - FRAME_TOP) / 0x08);
-          brick_inner.y = ((ball[b].loc.y + (ball[b].loc.h - 1) - FRAME_TOP) & 0x07);
-        } else {
-          brick_coord.y = ((ball[b].loc.y - FRAME_TOP) / 0x08);
-          brick_inner.y = 0x07 - ((ball[b].loc.y - FRAME_TOP) & 0x07);
-        }
-
-        // move 1 pixel at a time
-        if (penetration == 0) while(ticks_remaining) {
+      // move 1 pixel at a time
+      if (penetration == 0) while(ticks_remaining) {
           int move_x = 0;
           int move_y = 0;
           int hit_x = 0;
@@ -468,7 +468,7 @@ int main(int argc, char *argv[]) {
             if (brick_coord.y + ball[b].direction.y < 0) {
               hit_x = 1;
               printf("frame %d: hit top wall\n", frame);
-             } else if (brick_coord.y + ball[b].direction.y > WELL_HEIGHT - 1) {
+	    } else if (brick_coord.y + ball[b].direction.y > WELL_HEIGHT - 1) {
               /******* bottom of screen bounce -- remove at some point *******/
               hit_x = 1;
               printf("frame %d: hit bottom wall\n", frame);
@@ -508,54 +508,54 @@ int main(int argc, char *argv[]) {
               hit_y = 1;
               printf("frame %d: hit paddle side\n", frame);
               ball[b].ticks_max.x = 0x194C6;
-							ball[b].ticks_max.y = 0x3298C;
-							hit_x = 1;
-							ball[b].direction.y = 1;
+	      ball[b].ticks_max.y = 0x3298C;
+	      hit_x = 1;
+	      ball[b].direction.y = 1;
             } else {
               temp_ball.loc.y = ball[b].loc.y + (move_y*ball[b].direction.y);
               if (box_collide(&temp_ball, &paddle)) {
                 hit_x = 1;
                 /* 37 pixels of collision, from -5 to 31 */
-		            switch (temp_ball.loc.x - paddle.x) {
-		              case -5 ... 0: /* wide */
-			              printf("frame %d: hit paddle wide left\n", frame);
-			              if (ball[b].direction.x == 1) hit_y = 1;
-			              ball[b].ticks_max.x = 0x194C6;
-			              ball[b].ticks_max.y = 0x3298C;
-			              break;
-		              case 1 ... 6:
-			              printf("frame %d: hit paddle left\n", frame);
-			              if (ball[b].direction.x == 1) hit_y = 1;
-			              ball[b].ticks_max.x = 0x20000;
-			              ball[b].ticks_max.y = 0x20000;
-			              break;
-		              case 7 ... 12:
-			              printf("frame %d: hit paddle tall left\n", frame);
-			              if (ball[b].direction.x == 1) hit_y = 1;
-			              ball[b].ticks_max.x = 0x3298C;
-			              ball[b].ticks_max.y = 0x194C6;
-			              break;
-		              case 13 ... 19:
-			              printf("frame %d: hit paddle tall right\n", frame);
-			              if (ball[b].direction.x == -1) hit_y = 1;
-			              ball[b].ticks_max.x = 0x3298C;
-			              ball[b].ticks_max.y = 0x194C6;
-			              break;
-		              case 20 ... 25:
-			              printf("frame %d: hit paddle right\n", frame);
-			              if (ball[b].direction.x == -1) hit_y = 1;
-			              ball[b].ticks_max.x = 0x20000;
-			              ball[b].ticks_max.y = 0x20000;
-			              break;
-		              case 26 ... 31: /* wide */
-			              printf("frame %d: hit paddle wide right\n", frame);
-			              if (ball[b].direction.x == -1) hit_y = 1;
-			              ball[b].ticks_max.x = 0x194C6;
-			              ball[b].ticks_max.y = 0x3298C;
-		              	break;
-		              default:
-		              	printf("********** invalid paddle surface hit -- x delta = %d\n", ball[b].loc.x - paddle.x);
-		            }
+		switch (temp_ball.loc.x - paddle.x) {
+		case -5 ... 0: /* wide */
+		  printf("frame %d: hit paddle wide left\n", frame);
+		  if (ball[b].direction.x == 1) hit_y = 1;
+		  ball[b].ticks_max.x = 0x194C6;
+		  ball[b].ticks_max.y = 0x3298C;
+		  break;
+		case 1 ... 6:
+		  printf("frame %d: hit paddle left\n", frame);
+		  if (ball[b].direction.x == 1) hit_y = 1;
+		  ball[b].ticks_max.x = 0x20000;
+		  ball[b].ticks_max.y = 0x20000;
+		  break;
+		case 7 ... 12:
+		  printf("frame %d: hit paddle tall left\n", frame);
+		  if (ball[b].direction.x == 1) hit_y = 1;
+		  ball[b].ticks_max.x = 0x3298C;
+		  ball[b].ticks_max.y = 0x194C6;
+		  break;
+		case 13 ... 19:
+		  printf("frame %d: hit paddle tall right\n", frame);
+		  if (ball[b].direction.x == -1) hit_y = 1;
+		  ball[b].ticks_max.x = 0x3298C;
+		  ball[b].ticks_max.y = 0x194C6;
+		  break;
+		case 20 ... 25:
+		  printf("frame %d: hit paddle right\n", frame);
+		  if (ball[b].direction.x == -1) hit_y = 1;
+		  ball[b].ticks_max.x = 0x20000;
+		  ball[b].ticks_max.y = 0x20000;
+		  break;
+		case 26 ... 31: /* wide */
+		  printf("frame %d: hit paddle wide right\n", frame);
+		  if (ball[b].direction.x == -1) hit_y = 1;
+		  ball[b].ticks_max.x = 0x194C6;
+		  ball[b].ticks_max.y = 0x3298C;
+		  break;
+		default:
+		  printf("********** invalid paddle surface hit -- x delta = %d\n", ball[b].loc.x - paddle.x);
+		}
               }
             }
           }
@@ -576,9 +576,9 @@ int main(int argc, char *argv[]) {
             if (move_y == 1 && hit_x == 0) brick_inner.y--;
             brick_inner.x = (16 - brick_inner.x + ball[b].loc.w - 1);
             if (brick_inner.x >= 16) {
-                brick_coord.x += ball[b].direction.x;
-                brick_inner.x -= 16;
-              }
+	      brick_coord.x += ball[b].direction.x;
+	      brick_inner.x -= 16;
+	    }
           }
 
           // move if no hits
@@ -598,18 +598,18 @@ int main(int argc, char *argv[]) {
               }
             }
           } else {
-          	ball[b].ticks.x = 0;
-          	ball[b].ticks.y = 0;
+	    ball[b].ticks.x = 0;
+	    ball[b].ticks.y = 0;
           }
         }
 
-        Scale_Rect(&ball[b].loc, &temp);
-        SDL_BlitSurface( gfx_ball, NULL, screen, &temp );
-      }
+      Scale_Rect(&ball[b].loc, &temp);
+      SDL_BlitSurface( gfx_ball, NULL, screen, &temp );
+    }
 
-      for (i = 0; i < 28; i++) {
-        for (j=0; j<11; j++) {
-          if (brick[i][j].type != 0)
+    for (i = 0; i < 28; i++) {
+      for (j=0; j<11; j++) {
+	if (brick[i][j].type != 0)
           {
             struct SDL_Rect temp3;
             temp3.x = 0;
@@ -619,9 +619,9 @@ int main(int argc, char *argv[]) {
             Scale_Rect(&brick[i][j].loc, &temp);
             SDL_BlitSurface( gfx_brick, &temp3, screen, &temp );
           }
-        }
       }
     }
+
 
     SDL_Flip( screen );
     frame++;
@@ -632,13 +632,13 @@ int main(int argc, char *argv[]) {
 
     //Handle events on queue
     while( SDL_PollEvent( &e ) != 0 )
-    {
-      //User requests quit
-      if( e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
       {
-        quit = true;
+	//User requests quit
+	if( e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
+	  {
+	    quit = true;
+	  }
       }
-    }
   }
 
   Uint32 end = SDL_GetTicks();
