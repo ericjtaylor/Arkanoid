@@ -166,7 +166,7 @@ SDL_Surface* load_image(char *filename)
   if (SCALE == 2) {
     SDL_Surface *scan = NULL;
     SDL_Surface *scan_opt = NULL;
-    scan = IMG_Load("scanlines.png");
+    scan = IMG_Load("art/scanlines.png");
     scan_opt = SDL_DisplayFormat(scan);
     SDL_SetColorKey(scan_opt, SDL_SRCCOLORKEY, colourkey);
     SDL_BlitSurface(scan_opt, NULL, scaled, NULL);
@@ -259,13 +259,13 @@ int main(int argc, char *argv[]) {
   Uint32 start = SDL_GetTicks();
 
   // gfx loading
-  SDL_Surface* gfx_bg = load_image("background4.png");
-  SDL_Surface* gfx_frame = load_image("frame.png");
+  SDL_Surface* gfx_bg = load_image("art/background4.png");
+  SDL_Surface* gfx_frame = load_image("art/frame.png");
   SDL_BlitSurface( gfx_frame, NULL, gfx_bg, NULL );
 
-  SDL_Surface* gfx_ball = load_image("ball.png");
-  SDL_Surface* gfx_paddle = load_image("paddle.png");
-  SDL_Surface* gfx_brick = load_image("blox.png");
+  SDL_Surface* gfx_ball = load_image("art/ball.png");
+  SDL_Surface* gfx_paddle = load_image("art/paddle.png");
+  SDL_Surface* gfx_brick = load_image("art/blox.png");
 
   // playfield init
   SDL_Rect paddle = { (320/2) - 16, 240-24, 32, 8 };
