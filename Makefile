@@ -11,10 +11,10 @@ endif
 all: game
 
 game: game.c gpio.o
-	$(CC) $(CFLAGS) game.c -o $(GAMEBIN) gpio.o
+	$(CC) game.c $(CFLAGS) -o $(GAMEBIN) gpio.o
 
 gpio.o: gpio.c
-	$(CC) $(CFLAGS) gpio.c -c
+	$(CC) gpio.c $(CFLAGS) -c
 
 lvlgen: lvl.c
 	$(CC) lvl.c -o lvlgen
