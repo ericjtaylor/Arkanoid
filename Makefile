@@ -1,10 +1,20 @@
 CFLAGS += -lSDL -lSDL_image -lrt -O2
 GAMEBIN += game
 
-all: game lvlgen
+ifeq (run,$(firstword $(MAKECMDGOALS)))
+  # use the rest as arguments for "run"
+  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  # ...and turn them into do-nothing targets
+  $(eval $(RUN_ARGS):;@:)
+endif
 
-game: game.c
-	$(CC) $(CFLAGS) game.c -o $(GAMEBIN)
+all: game
+
+game: game.c gpio.o
+	$(CC) $(CFLAGS) game.c -o $(GAMEBIN) gpio.o
+
+gpio.o: gpio.c
+	$(CC) $(CFLAGS) gpio.c -c
 
 lvlgen: lvl.c
 	$(CC) lvl.c -o lvlgen
@@ -13,6 +23,6 @@ clean:
 	rm -f game lvlgen
 
 run: game
-	./game
+	./game ${RUN_ARGS}
 
-.PHONY: clean run
+.PHONY: clean run ${RUN_ARGS}

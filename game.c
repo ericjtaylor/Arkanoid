@@ -6,6 +6,7 @@
 #include <time.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
+#include "gpio.h"
 
 /* TODO
 test flat double hits
@@ -31,6 +32,8 @@ const int BALLS = 1;
 const int WELL_WIDTH = 11;
 const int WELL_HEIGHT = 28;
 const int TICKS_PER_FRAME = 0x20000*3;
+
+static volatile bool gpio_exists = false;
 
 struct Vector  {
   int x;
@@ -75,39 +78,7 @@ void make_lvl(char *stage, struct Bricks brix[][WELL_WIDTH])
   return;
 }
 
-// polls for button press by reading the state of a hardware file.
-int gpio_poll()
-{
-  FILE *f;
-  char buf[8];
 
-  if (access("/sys/class/gpio/gpio7/value", F_OK) != -1) {
-    f = fopen("/sys/class/gpio/gpio7/value", "r");
-    fgets (buf, sizeof(buf), f);
-    fclose(f);
-    if (strcmp(buf, "1\n") == 0)
-    return 1;
-    else
-    return 0;
-  } else return 0;
-}
-
-// initializes the gpio hardware file and
-// sets the direction.
-void gpio_init(char *gpio_num, char *direction)
-{
-  FILE *f;
-  if ((access("/sys/class/gpio/export", F_OK) != -1)
-  &&
-  (access("/sys/class/gpio/gpio7/direction", F_OK) != -1)) {
-    f = fopen("/sys/class/gpio/export", "w");
-    fprintf(f, "%s", gpio_num);
-    fclose(f);
-    f = fopen("/sys/class/gpio/gpio7/direction", "w");
-    fprintf(f, "%s", direction);
-    fclose(f);
-  } else printf("GPIO not found\n");
-}
 
 Uint32 getpixel(SDL_Surface *surface, int x, int y)
 {
@@ -253,7 +224,7 @@ int main(int argc, char *argv[]) {
   printf("Launching...\n");
 
   // inits
-  gpio_init("7", "out");
+  gpio_exists = gpio_init("7", "out");
   //printf("I/O INIT OK\n");
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     fprintf(stderr, "Unable to init SDL: %s\n", SDL_GetError());
@@ -361,7 +332,7 @@ int main(int argc, char *argv[]) {
       clock_gettime (CLOCK_MONOTONIC, &time_ns);
     }
 
-    if (gpio_poll() == 0 ) {
+    if ((gpio_exists == true) && gpio_poll() == 0) {
       SDL_BlitSurface( gfx_bg, NULL, screen, NULL );
       keystate = SDL_GetKeyState(NULL);
       // continuous-response keys
