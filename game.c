@@ -25,7 +25,7 @@ const int FRAME_RIGHT = 247;
 const int FRAME_TOP = 16;
 const int FRAME_BOTTOM = 240;
 
-const int BALLS = 1;
+const int BALLS = 12;
 const int WELL_WIDTH = 11;
 const int WELL_HEIGHT = 28;
 const int TICKS_PER_FRAME = 0x20000*3;
@@ -33,8 +33,8 @@ const int TICKS_PER_FRAME = 0x20000*3;
 static volatile bool gpio_exists = false;
 
 struct Vector  {
-  int x;
-  int y;
+  int32_t x;
+  int32_t y;
 };
 
 struct Balls {
@@ -190,7 +190,6 @@ int box_collide(struct Balls *ball, SDL_Rect *paddle) {
     collision = 0;
 
   return collision;
-
 }
 
 inline void add_ns(struct timespec *ts1, struct timespec *ts2) {
@@ -242,7 +241,7 @@ int main(int argc, char *argv[]) {
   frame_delay.tv_sec = 0;
   frame_delay.tv_nsec = 0;
   add_ns(&next_frame, &frame_delay);
-  int ticks_remaining = 0;
+  int32_t ticks_remaining = 0;
 
   SDL_Surface* screen = NULL;
   screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 16, SDL_SWSURFACE | SDL_HWACCEL);
@@ -281,6 +280,7 @@ int main(int argc, char *argv[]) {
     ball[i].ticks_max.y = 0x20000;
     ball[i].ticks.x = 0;
     ball[i].ticks.y = 0;
+    if (i > 0) ball[i].direction.x = 0;
   }
 
   struct Bricks brick[28][11];
@@ -368,6 +368,8 @@ int main(int argc, char *argv[]) {
     int b;
     for(b = 0; b < BALLS; b++) {
 
+      if (ball[b].direction.x == 0) continue;
+
       // check for the paddle moving into the ball
       int penetration = 0;
       if (box_collide(&ball[b], &paddle)) {
@@ -408,19 +410,20 @@ int main(int argc, char *argv[]) {
       }
 
       // move 1 pixel at a time
-      while(ticks_remaining) {
+      int32_t ball_ticks_remaining = ticks_remaining;
+      while(ball_ticks_remaining) {
           int move_x = 0;
           int move_y = 0;
           int hit_x = 0;
           int hit_y = 0;
 
           // check for movement
-          if (ticks_remaining >= 0x10000){
+          if (ball_ticks_remaining >= 0x10000){
             ticks = 0x10000;
-            ticks_remaining -= 0x10000;
+            ball_ticks_remaining -= 0x10000;
           } else {
-            ticks = ticks_remaining;
-            ticks_remaining = 0;
+            ticks = ball_ticks_remaining;
+            ball_ticks_remaining = 0;
           }
           ball[b].ticks.x += ticks;
           if (ball[b].ticks.x >= ball[b].ticks_max.x) {
@@ -598,20 +601,24 @@ int main(int argc, char *argv[]) {
 
       Scale_Rect(&ball[b].loc, &temp);
       SDL_BlitSurface( gfx_ball, NULL, screen, &temp );
+
+
+
+
     }
 
     for (i = 0; i < 28; i++) {
       for (j=0; j<11; j++) {
-	if (brick[i][j].type != 0)
-          {
-            struct SDL_Rect temp3;
-            temp3.x = 0;
-            temp3.y = (brick[i][j].type - 1) *8*SCALE;
-            temp3.h = 8*SCALE;
-            temp3.w = 16*SCALE;
-            Scale_Rect(&brick[i][j].loc, &temp);
-            SDL_BlitSurface( gfx_brick, &temp3, screen, &temp );
-          }
+        if (brick[i][j].type != 0)
+        {
+          struct SDL_Rect temp3;
+          temp3.x = 0;
+          temp3.y = (brick[i][j].type - 1) *8*SCALE;
+          temp3.h = 8*SCALE;
+          temp3.w = 16*SCALE;
+          Scale_Rect(&brick[i][j].loc, &temp);
+          SDL_BlitSurface( gfx_brick, &temp3, screen, &temp );
+        }
       }
     }
 
@@ -630,7 +637,55 @@ int main(int argc, char *argv[]) {
     	  {
     	    quit = true;
     	  }
+
+      //Multiball
+      if( e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_BACKSPACE)
+      {
+        int m;
+        int highest = 0;
+        int highest_x = 999;
+        int highest_y = 999;
+        for (m = 0; m < BALLS; m++) {
+          if (ball[m].loc.y < highest_y) {
+            highest_x = ball[m].loc.x;
+            highest_y = ball[m].loc.y;
+            highest = m;
+          }
+        }
+        for (m = 0; m < BALLS; m++) {
+          ball[m].loc.x = highest_x;
+          ball[m].loc.y = highest_y;
+          ball[m].ticks.x = 0;
+          ball[m].ticks.y = 0;
+          switch (m) {
+          case 0: case 3: case 4: case 7:
+            ball[m].ticks_max.x = 0x3298C;
+            ball[m].ticks_max.y = 0x194C6;
+            break;
+          case 1: case 2: case 5: case 6:
+            ball[m].ticks_max.x = 0x194C6;
+            ball[m].ticks_max.y = 0x3298C;
+            break;
+          }
+          switch (m) {
+          case 0 ... 3:
+            ball[m].direction.x = -1;
+            break;
+          case 4 ... 7:
+            ball[m].direction.x = 1;
+            break;
+          }
+          switch (m) {
+          case 0: case 1: case 6: case 7:
+            ball[m].direction.y = -1;
+            break;
+          case 2 ... 5:
+            ball[m].direction.y = 1;
+            break;
+          }
+        }
       }
+    }
   }
 
   Uint32 end = SDL_GetTicks();
