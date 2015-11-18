@@ -25,7 +25,7 @@ const int FRAME_RIGHT = 247;
 const int FRAME_TOP = 16;
 const int FRAME_BOTTOM = 240;
 
-const int BALLS = 12;
+const int BALL_INVINCIBLE = 1;
 const int WELL_WIDTH = 11;
 const int WELL_HEIGHT = 28;
 const int TICKS_PER_FRAME = 0x20000*3;
@@ -213,6 +213,8 @@ void Scale_Rect(SDL_Rect *srcrect, SDL_Rect *srcrect2) {
   srcrect2->y = srcrect->y*SCALE;
   srcrect2->h = srcrect->h*SCALE;
   srcrect2->w = srcrect->w*SCALE;
+  if (srcrect->y + srcrect->h - 1 >= 320)
+    srcrect2->h -= ((srcrect2->y + srcrect2->h - 1) - (320 - 1)) * SCALE;
   return;
 }
 
@@ -267,9 +269,10 @@ int main(int argc, char *argv[]) {
   SDL_Rect paddle = { (320/2) - 16, 240-24, 32, 8 };
   SDL_Rect paddle_size = { 0, 0, 32, 8 };
 
-  struct Balls ball[BALLS];
+  struct Balls ball[8];
+  int active_balls = 1;
   int i, j;
-  for(i = 0; i < BALLS; i++) {
+  for(i = 0; i < 8; i++) {
     ball[i].loc.x = paddle.x - 12 + -3 + 9;
     ball[i].loc.y = 240*0.8;
     ball[i].loc.h = 6;
@@ -280,7 +283,7 @@ int main(int argc, char *argv[]) {
     ball[i].ticks_max.y = 0x20000;
     ball[i].ticks.x = 0;
     ball[i].ticks.y = 0;
-    if (i > 0) {
+    if (i > active_balls - 1) {
       ball[i].direction.x = 0;
       ball[i].loc.y = 999;
     }
@@ -369,7 +372,7 @@ int main(int argc, char *argv[]) {
     SDL_BlitSurface( gfx_paddle, &temp, screen, &temp2 );
 
     int b;
-    for(b = 0; b < BALLS; b++) {
+    for(b = 0; b < 8; b++) {
 
       if (ball[b].direction.x == 0) continue;
 
@@ -414,12 +417,13 @@ int main(int argc, char *argv[]) {
 
       // move 1 pixel at a time
       int32_t ball_ticks_remaining = ticks_remaining;
+      int iteration = 0;
       while(ball_ticks_remaining) {
           int move_x = 0;
           int move_y = 0;
           int hit_x = 0;
           int hit_y = 0;
-
+          iteration++;
           // check for movement
           if (ball_ticks_remaining >= 0x10000){
             ticks = 0x10000;
@@ -468,9 +472,14 @@ int main(int argc, char *argv[]) {
               hit_x = 1;
               printf("frame %d: hit top wall\n", frame);
 	    } else if (brick_coord.y + ball[b].direction.y > WELL_HEIGHT - 1) {
-              /******* bottom of screen bounce -- remove at some point *******/
-              hit_x = 1;
-              printf("frame %d: hit bottom wall\n", frame);
+              /* bottom of screen bounce (only if invicibility is set) */
+              if(active_balls == BALL_INVINCIBLE) {
+                hit_x = 1;
+                printf("frame %d: hit bottom wall\n", frame);
+              } else if (brick_coord.y + ball[b].direction.y == WELL_HEIGHT) {
+                active_balls--;
+                ball_ticks_remaining = 0;
+              }
             } else {
               if (brick[brick_coord.y + ball[b].direction.y][brick_coord.x].type != 0) {
                 hit_x = 1;
@@ -602,6 +611,7 @@ int main(int argc, char *argv[]) {
           }
         }
 
+      if (ball[b].loc.y >= 240) ball[b].direction.x = 0;
       Scale_Rect(&ball[b].loc, &temp);
       SDL_BlitSurface( gfx_ball, NULL, screen, &temp );
 
@@ -648,7 +658,8 @@ int main(int argc, char *argv[]) {
         int highest = 0;
         int highest_x = 999;
         int highest_y = 999;
-        for (m = 0; m < BALLS; m++) {
+        active_balls = 8;
+        for (m = 0; m < 8; m++) {
           if (ball[m].loc.y < highest_y) {
             highest_x = ball[m].loc.x;
             highest_y = ball[m].loc.y;
