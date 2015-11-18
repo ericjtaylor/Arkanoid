@@ -280,7 +280,10 @@ int main(int argc, char *argv[]) {
     ball[i].ticks_max.y = 0x20000;
     ball[i].ticks.x = 0;
     ball[i].ticks.y = 0;
-    if (i > 0) ball[i].direction.x = 0;
+    if (i > 0) {
+      ball[i].direction.x = 0;
+      ball[i].loc.y = 999;
+    }
   }
 
   struct Bricks brick[28][11];
@@ -652,7 +655,7 @@ int main(int argc, char *argv[]) {
             highest = m;
           }
         }
-        for (m = 0; m < BALLS; m++) {
+        for (m = 0; m < 8; m++) {
           ball[m].loc.x = highest_x;
           ball[m].loc.y = highest_y;
           ball[m].ticks.x = 0;
