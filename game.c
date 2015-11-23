@@ -297,7 +297,7 @@ int main(int argc, char *argv[]) {
       brick[i][j].loc.h = 8;
       brick[i][j].loc.w = 16;
       brick[i][j].type = 0;
-      if (i<=13) brick[i][j].type = (j % 7) + 1;
+      if (i<=13) brick[i][j].type = (j % 9) + 1;
     }
   }
 
