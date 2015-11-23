@@ -10,7 +10,7 @@ endif
 
 all: game
 
-game: game.c gpio.o
+game: gpio.o game.c 
 	$(CC) game.c $(CFLAGS) -o $(GAMEBIN) gpio.o
 
 gpio.o: gpio.c
