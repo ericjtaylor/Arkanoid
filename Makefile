@@ -16,11 +16,8 @@ game: game.c gpio.o
 gpio.o: gpio.c
 	$(CC) gpio.c $(CFLAGS) -c
 
-lvlgen: lvl.c
-	$(CC) lvl.c -o lvlgen
-
 clean:
-	rm -f game lvlgen
+	rm -f game
 
 run: game
 	./game ${RUN_ARGS}
