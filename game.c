@@ -9,11 +9,16 @@
 #include "gpio.h"
 
 /* TODO
-   complete
+   add indestructible blocks
+   add preliminary gold blocks
+   add multiball meter
+   add gold balls
+   add score
+   add scoring
 */
 
 /* IMPROVEMENTS
-   complete
+   unhack scaling and add bounds checking (segfault?)
 */
 
 //Screen dimension constants
@@ -176,20 +181,39 @@ SDL_Surface* load_image(char *filename)
   return scaled;
 }
 
-int box_collide(struct Balls *ball, SDL_Rect *paddle) {
+int box_collide(SDL_Rect *ball, SDL_Rect *paddle) {
 
   int collision = 1;
 
-  if (ball->loc.x + (ball->loc.w - 1) < paddle->x) // R1 < L2
+  if (ball->x + (ball->w - 1) < paddle->x) // R1 < L2
     collision = 0;
-  else if (ball->loc.x > paddle->x + (paddle->w - 1)) // L1 > R2
+  else if (ball->x > paddle->x + (paddle->w - 1)) // L1 > R2
     collision = 0;
-  else if (ball->loc.y > paddle->y + (paddle->h - 1)) // U1 < D2
+  else if (ball->y > paddle->y + (paddle->h - 1)) // U1 < D2
     collision = 0;
-  else if (ball->loc.y + (ball->loc.h - 1) < paddle->y) // D1 > U2
+  else if (ball->y + (ball->h - 1) < paddle->y) // D1 > U2
     collision = 0;
 
   return collision;
+}
+
+inline int hit(struct Bricks *brick) {
+  switch (brick->type) {
+    case 0:
+      return 0;
+    case 1 ... 7:
+    case 9:
+      brick->type = 0;
+    case 8:
+      return 1;
+    case 14:
+      brick->type = 9;
+      return 1;
+    default:
+      brick->type--;
+      return 1;
+  }
+  return;
 }
 
 inline void add_ns(struct timespec *ts1, struct timespec *ts2) {
@@ -271,6 +295,7 @@ int main(int argc, char *argv[]) {
 
   struct Balls ball[8];
   int active_balls = 1;
+  int supermeter = 0;
   int i, j;
   for(i = 0; i < 8; i++) {
     ball[i].loc.x = paddle.x - 12 + -3 + 9;
@@ -378,7 +403,8 @@ int main(int argc, char *argv[]) {
 
       // check for the paddle moving into the ball
       int penetration = 0;
-      if (box_collide(&ball[b], &paddle)) {
+      if (box_collide(&ball[b].loc, &paddle)) {
+        supermeter += active_balls;
         ball[b].direction.y = -1;
         ball[b].ticks_max.x = 0x194C6;
         ball[b].ticks_max.y = 0x3298C;
@@ -451,17 +477,15 @@ int main(int argc, char *argv[]) {
               hit_y = 1;
               printf("frame %d: hit vert wall\n", frame);
             } else {
-              if (brick[brick_coord.y][brick_coord.x + ball[b].direction.x].type != 0) {
+              if (hit(&brick[brick_coord.y][brick_coord.x + ball[b].direction.x])) {
                 hit_y = 1;
                 printf("frame %d: hit vert brick\n", frame);
-                brick[brick_coord.y][brick_coord.x + ball[b].direction.x].type = 0;
               }
               // splashover
               if (brick_inner.y < ball[b].loc.h && (brick_coord.y - ball[b].direction.y) >= 0 && (brick_coord.y - ball[b].direction.y) < SCREEN_HEIGHT) {
-                if (brick[brick_coord.y - ball[b].direction.y][brick_coord.x + ball[b].direction.x].type != 0) {
+                if (hit(&brick[brick_coord.y - ball[b].direction.y][brick_coord.x + ball[b].direction.x])) {
                   hit_y = 1;
                   printf("frame %d: hit vert brick splash\n", frame);
-                  brick[brick_coord.y - ball[b].direction.y][brick_coord.x + ball[b].direction.x].type = 0;
                 }
               }
             }
@@ -481,28 +505,25 @@ int main(int argc, char *argv[]) {
                 ball_ticks_remaining = 0;
               }
             } else {
-              if (brick[brick_coord.y + ball[b].direction.y][brick_coord.x].type != 0) {
+              if (hit(&brick[brick_coord.y + ball[b].direction.y][brick_coord.x])) {
                 hit_x = 1;
                 printf("frame %d: hit hori brick\n", frame);
-                brick[brick_coord.y + ball[b].direction.y][brick_coord.x].type = 0;
               }
               // splashover
               if (brick_inner.x < ball[b].loc.w && (brick_coord.x - ball[b].direction.x) >= 0 && (brick_coord.x - ball[b].direction.x) < SCREEN_WIDTH) {
-                if (brick[brick_coord.y + ball[b].direction.y][brick_coord.x - ball[b].direction.x].type != 0) {
+                if (hit(&brick[brick_coord.y + ball[b].direction.y][brick_coord.x - ball[b].direction.x])) {
                   hit_x = 1;
                   printf("frame %d: hit hori brick splash\n", frame);
-                  brick[brick_coord.y + ball[b].direction.y][brick_coord.x - ball[b].direction.x].type = 0;
                 }
               }
             }
           }
           // check for corner hits (out of bounds should have already triggered a hit)
           if (brick_inner.x == 16 && brick_inner.y == 8 && hit_x == 0 && hit_y == 0) {
-            if (brick[brick_coord.y + ball[b].direction.y][brick_coord.x + ball[b].direction.x].type != 0) {
+            if (hit(&brick[brick_coord.y + ball[b].direction.y][brick_coord.x + ball[b].direction.x])) {
               hit_x = 1;
               hit_y = 1;
               printf("frame %d: hit corner\n", frame);
-              brick[brick_coord.y + ball[b].direction.y][brick_coord.x + ball[b].direction.x].type = 0;
             }
           }
           // check for paddle surface hits
@@ -512,7 +533,8 @@ int main(int argc, char *argv[]) {
             temp_ball.loc.y = ball[b].loc.y;
             temp_ball.loc.h = ball[b].loc.h;
             temp_ball.loc.w = ball[b].loc.w;
-            if (box_collide(&temp_ball, &paddle)) {
+            if (box_collide(&temp_ball.loc, &paddle)) {
+              supermeter += active_balls;
               hit_y = 1;
               printf("frame %d: hit paddle side\n", frame);
               ball[b].ticks_max.x = 0x194C6;
@@ -521,7 +543,8 @@ int main(int argc, char *argv[]) {
       	      ball[b].direction.y = 1;
             } else {
               temp_ball.loc.y = ball[b].loc.y + (move_y*ball[b].direction.y);
-              if (box_collide(&temp_ball, &paddle)) {
+              if (box_collide(&temp_ball.loc, &paddle)) {
+                supermeter += active_balls;
                 hit_x = 1;
                 /* 37 pixels of collision, from -5 to 31 */
             		switch (temp_ball.loc.x - paddle.x) {
@@ -654,6 +677,14 @@ int main(int argc, char *argv[]) {
       //Multiball
       if( e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_BACKSPACE)
       {
+        for (i = 0; i < 28; i++) {
+          for (j=0; j<11; j++) {
+            switch (brick[i][j].type)
+            case 9 ... 13:
+            brick[i][j].type++;
+          }
+        }
+
         int m;
         int highest = 0;
         int highest_x = 999;
