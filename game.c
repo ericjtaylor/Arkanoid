@@ -21,7 +21,7 @@
    unhack scaling and add bounds checking (segfault?)
 */
 
-//Screen dimension constants
+// screen dimension constants
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 const int SCALE = 2;
@@ -29,11 +29,15 @@ const int FRAME_LEFT = 72;
 const int FRAME_RIGHT = 247;
 const int FRAME_TOP = 16;
 const int FRAME_BOTTOM = 240;
-
-const int BALL_INVINCIBLE = 1;
 const int WELL_WIDTH = 11;
 const int WELL_HEIGHT = 28;
+
+// game speed
 const int TICKS_PER_FRAME = 0x20000*3;
+
+// gameplay
+const int BALL_INVINCIBLE = 1;
+const int SUPER_MAX = 100;
 
 static volatile bool gpio_exists = false;
 
@@ -360,10 +364,19 @@ int main(int argc, char *argv[]) {
       clock_gettime (CLOCK_MONOTONIC, &time_ns);
     }
 
-
     SDL_BlitSurface( gfx_bg, NULL, screen, NULL );
+    struct SDL_Rect temp4;
+    temp4.x = 52*SCALE;
+    temp4.y = (120+SUPER_MAX-supermeter)*SCALE;
+    temp4.h = supermeter*SCALE;
+    temp4.w = 8*SCALE;
+    if (supermeter == SUPER_MAX && frame % 2)
+      SDL_FillRect(screen, &temp4, SDL_MapRGB(screen->format, 0x8F, 0x8F, 0x8F));
+    else
+      SDL_FillRect(screen, &temp4, SDL_MapRGB(screen->format, 0xFF, 0xFF, 0xFF));
+
     keystate = SDL_GetKeyState(NULL);
-    // continuous-response keys
+     // continuous-response keys
     if((keystate[SDLK_LEFT]) && (!keystate[SDLK_RIGHT]))
       {
         paddle.x -= 5;
@@ -404,7 +417,8 @@ int main(int argc, char *argv[]) {
       // check for the paddle moving into the ball
       int penetration = 0;
       if (box_collide(&ball[b].loc, &paddle)) {
-        supermeter += active_balls;
+        supermeter += 2*active_balls;
+        if (supermeter > SUPER_MAX) supermeter = SUPER_MAX;
         ball[b].direction.y = -1;
         ball[b].ticks_max.x = 0x194C6;
         ball[b].ticks_max.y = 0x3298C;
@@ -534,7 +548,8 @@ int main(int argc, char *argv[]) {
             temp_ball.loc.h = ball[b].loc.h;
             temp_ball.loc.w = ball[b].loc.w;
             if (box_collide(&temp_ball.loc, &paddle)) {
-              supermeter += active_balls;
+              supermeter += 2*active_balls;
+              if (supermeter > SUPER_MAX) supermeter = SUPER_MAX;
               hit_y = 1;
               printf("frame %d: hit paddle side\n", frame);
               ball[b].ticks_max.x = 0x194C6;
@@ -544,7 +559,8 @@ int main(int argc, char *argv[]) {
             } else {
               temp_ball.loc.y = ball[b].loc.y + (move_y*ball[b].direction.y);
               if (box_collide(&temp_ball.loc, &paddle)) {
-                supermeter += active_balls;
+                supermeter += 2*active_balls;
+                if (supermeter > SUPER_MAX) supermeter = SUPER_MAX;
                 hit_x = 1;
                 /* 37 pixels of collision, from -5 to 31 */
             		switch (temp_ball.loc.x - paddle.x) {
@@ -675,8 +691,10 @@ int main(int argc, char *argv[]) {
     	  }
 
       //Multiball
-      if( e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_BACKSPACE)
+      if( e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_BACKSPACE && supermeter == SUPER_MAX)
       {
+        supermeter = 0;
+
         for (i = 0; i < 28; i++) {
           for (j=0; j<11; j++) {
             switch (brick[i][j].type)
