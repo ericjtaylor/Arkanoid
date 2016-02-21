@@ -36,8 +36,8 @@ const int WELL_HEIGHT = 28;
 const int TICKS_PER_FRAME = 0x20000*3;
 
 // gameplay
-const int BALL_INVINCIBLE = 1;
-const int SUPER_MAX = 100;
+const int BALL_INVINCIBLE = 0;
+const int SUPER_MAX = 25;
 
 static volatile bool gpio_exists = false;
 
