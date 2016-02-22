@@ -9,16 +9,9 @@
 #include "gpio.h"
 
 /* TODO
-   add indestructible blocks
-   add preliminary gold blocks
-   add multiball meter
-   add gold balls
-   add score
-   add scoring
-*/
-
-/* IMPROVEMENTS
-   unhack scaling and add bounds checking (segfault?)
+   multiball meter
+   gold balls
+   scoring
 */
 
 // screen dimension constants
